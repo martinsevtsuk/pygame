@@ -31,7 +31,8 @@ playerright_flipped_surf = pygame.transform.flip(playerright_surf, True, False)
 playerright_flipped_surf = pygame.transform.scale(playerright_flipped_surf, (75, 120))
 
 ball_surf = pygame.image.load("Images/soccerball.png").convert_alpha()
-ball_rect = ball_surf.get_rect()
+ball_surf = pygame.transform.scale(ball_surf, (42, 42))
+ball_rect = ball_surf.get_rect(midtop=(0, 0))
 
 goalWidth = 150
 goalHeight = 240
@@ -40,8 +41,12 @@ gravity = 0.55  # Gravitatsiooni tugevus
 jump_strength = -20
 playerleft_upspeed = 0  # Algne ülesliikumise kiirus
 playerright_upspeed = 0
+ball_upspeed = 15;
+ball_speed = 6;
+ball_slowing = 1.09
 is_left_player_on_ground = True
 is_right_player_on_ground = True
+is_ball_on_ground = False;
 
 move_speed = 6
 playerleft_facing_goal = True
@@ -97,11 +102,16 @@ while True:
 
     playerleft_upspeed += gravity # Lisab gravitatsiooni
     playerright_upspeed += gravity
+    ball_upspeed += gravity
 
     playerleft_rect.y += playerleft_upspeed # Liigutab vasakut mängijat
     playerright_rect.y += playerright_upspeed # Liigutab paremat mängijat
+    ball_rect.y += ball_upspeed
+    ball_rect.x += ball_speed
 
 
+    ###################################################################################################
+    #Vasak mangija varavas
     if playerleft_rect.right <= goalWidth or playerleft_rect.left >= 1280 - goalWidth :
         if  playerleft_rect.top <= goalHeight + 20 <= playerleft_rect.bottom and playerleft_upspeed < 0:
             playerleft_upspeed = 0;
@@ -113,7 +123,7 @@ while True:
 
 
 
-
+    #Parem mangija varavas
     if playerright_rect.right <= goalWidth or playerright_rect.left >= 1280 - goalWidth :
         if  playerright_rect.top <= goalHeight + 20 <= playerright_rect.bottom and playerright_upspeed < 0:
             playerright_upspeed = 0;
@@ -122,6 +132,11 @@ while True:
             playerright_rect.bottom = goalHeight
             playerright_upspeed = 0
             is_right_player_on_ground = True
+
+    #################################################################################################
+
+
+
 
 
 
@@ -137,7 +152,33 @@ while True:
         is_right_player_on_ground = True
 
 
+    #palli porkumine###########################################################
+    if ball_rect.right <= goalWidth or ball_rect.left >= 1280 - goalWidth:
+        if ball_rect.top <= goalHeight + 20 <= ball_rect.bottom and ball_upspeed < 0:
+            ball_upspeed = 0;
+            ball_speed = ball_speed / ball_slowing
 
+        elif ball_rect.bottom >= goalHeight >= ball_rect.top:
+            ball_rect.bottom = goalHeight
+            if ball_upspeed <= 1.5:
+                is_ball_on_ground = True
+                ball_upspeed = 0
+            else:
+                ball_upspeed = -1 * (ball_upspeed / 1.6)
+
+            ball_speed = ball_speed / ball_slowing
+    if ball_rect.bottom > 500:
+        ball_rect.bottom = 500
+        if ball_upspeed <= 1.5:
+            is_ball_on_ground = True
+            ball_upspeed = 0
+        else:
+            ball_upspeed = -1 * (ball_upspeed / 1.6)
+        ball_speed = ball_speed / ball_slowing
+    ###########################################################
+
+    if (abs(ball_speed) < 0.01):
+        ball_speed = 0
     screen.blit(bg_surf, (0, 0))
     screen.blit(goalleft_surf, goalleft_rect)
     screen.blit(goalright_surf, goalright_rect)
