@@ -33,11 +33,13 @@ playerright_flipped_surf = pygame.transform.scale(playerright_flipped_surf, (75,
 ball_surf = pygame.image.load("Images/soccerball.png").convert_alpha()
 ball_rect = ball_surf.get_rect()
 
+goalWidth = 150
+goalHeight = 240
 
 gravity = 0.55  # Gravitatsiooni tugevus
 jump_strength = -20
 playerleft_upspeed = 0  # Algne ülesliikumise kiirus
-playerright_upspeed = 0  
+playerright_upspeed = 0
 is_left_player_on_ground = True
 is_right_player_on_ground = True
 
@@ -51,7 +53,7 @@ while True:
             pygame.quit()
             exit()
 
-    
+
     keys = pygame.key.get_pressed() # Kontrollib klahvivajutusi
 
     #LIIKUMINE
@@ -71,12 +73,16 @@ while True:
         playerright_rect.x -= move_speed
         playerright_facing_goal = True
 
-    
+
     if playerleft_rect.left < 0:
         playerleft_rect.left = 0
-    
+    elif playerleft_rect.right > 1280:
+        playerleft_rect.right = 1280
+
     if playerright_rect.right > 1280:
         playerright_rect.right = 1280
+    elif playerright_rect.left < 0:
+        playerright_rect.left = 0;
 
     # HÜPPAMINE
     # Vasak mängija hüpe
@@ -95,13 +101,28 @@ while True:
     playerleft_rect.y += playerleft_upspeed # Liigutab vasakut mängijat
     playerright_rect.y += playerright_upspeed # Liigutab paremat mängijat
 
-    if playerleft_rect.right <= 150 and playerleft_rect.top <= 285 and playerleft_upspeed < 0:
-        playerleft_upspeed = 0;
 
-    elif playerleft_rect.right <= 150 and playerleft_rect.bottom >= 210 and playerleft_rect.top <= 210:
-        playerleft_rect.bottom = 210
-        playerleft_upspeed = 0
-        is_left_player_on_ground = True
+    if playerleft_rect.right <= goalWidth or playerleft_rect.left >= 1280 - goalWidth :
+        if  playerleft_rect.top <= goalHeight + 20 <= playerleft_rect.bottom and playerleft_upspeed < 0:
+            playerleft_upspeed = 0;
+
+        elif playerleft_rect.bottom >= goalHeight >= playerleft_rect.top:
+            playerleft_rect.bottom = goalHeight
+            playerleft_upspeed = 0
+            is_left_player_on_ground = True
+
+
+
+
+    if playerright_rect.right <= goalWidth or playerright_rect.left >= 1280 - goalWidth :
+        if  playerright_rect.top <= goalHeight + 20 <= playerright_rect.bottom and playerright_upspeed < 0:
+            playerright_upspeed = 0;
+
+        elif playerright_rect.bottom >= goalHeight >= playerright_rect.top:
+            playerright_rect.bottom = goalHeight
+            playerright_upspeed = 0
+            is_right_player_on_ground = True
+
 
 
 
