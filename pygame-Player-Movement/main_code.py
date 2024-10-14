@@ -33,7 +33,7 @@ playerright_flipped_surf = pygame.transform.scale(playerright_flipped_surf, (75,
 ball_surf = pygame.image.load("Images/soccerball.png").convert_alpha()
 ball_surf = pygame.transform.scale(ball_surf, (42, 42))
 ball_rect = ball_surf.get_rect(midtop=(0, 0))
-
+ball_rotation_angle = 0
 goalWidth = 150
 goalHeight = 240
 
@@ -60,16 +60,16 @@ while True:
             exit()
 
     keys = pygame.key.get_pressed()  # Kontrollib klahvivajutusi
+    isSimpleCollide = pygame.Rect.colliderect(playerleft_rect, playerright_rect)
 
 
 
 
-    print(playerleft_rect.right)
     areColliding = pygame.Rect.colliderect(playerleft_rect, playerright_rect) and (
                 (playerleft_rect.left < playerright_rect.left and (keys[pygame.K_d] or keys[pygame.K_LEFT])) or (
                     playerleft_rect.right > playerright_rect.right and (keys[pygame.K_a] or keys[pygame.K_RIGHT])))
     leftTouchingBall = pygame.Rect.colliderect(playerleft_rect, ball_rect) and ((keys[pygame.K_d] and ball_rect.right > playerleft_rect.right) or (keys[pygame.K_a] and ball_rect.x < playerleft_rect.x))
-    rightTouchingBall = pygame.Rect.colliderect(playerright_rect, ball_rect) and ((keys[pygame.K_LEFT] and ball_rect.x > playerright_rect.x) or (keys[pygame.K_RIGHT] and ball_rect.x < playerright_rect.x))
+    rightTouchingBall = pygame.Rect.colliderect(playerright_rect, ball_rect) and ((keys[pygame.K_RIGHT] and ball_rect.left > playerright_rect.left) or (keys[pygame.K_LEFT] and ball_rect.x < playerright_rect.x))
     leftShift = 0
     rightShift = 0
     ballShift = 0
@@ -125,6 +125,37 @@ while True:
     elif playerright_rect.left < 0:
         playerright_rect.left = 0;
 
+
+    leftTouchingBallVertically = pygame.Rect.colliderect(playerleft_rect, ball_rect) and ball_rect.top > playerleft_rect.top
+    rightTouchingBallVertically = pygame.Rect.colliderect(playerright_rect, ball_rect) and ball_rect.top > playerright_rect.top
+
+    #Mangija loomine
+    if (leftTouchingBallVertically and keys[pygame.K_q]):
+        ballDir = 1;
+        if (playerleft_facing_goal == False):
+            ballDir = -1
+        ball_speed = 12 * ballDir
+        ball_upspeed = -14
+    if (rightTouchingBallVertically and keys[pygame.K_KP0]):
+        ballDir = 1;
+        if (playerright_facing_goal == True):
+            ballDir = -1
+        ball_speed = 12 * ballDir
+        ball_upspeed = -14
+
+
+    #Mängija põrkumine mängijast
+    isOneOnTopOfOther = isSimpleCollide and (playerleft_rect.top > playerright_rect.top or playerright_rect.top > playerleft_rect.top)
+    if isOneOnTopOfOther:
+        if playerleft_rect.top < playerright_rect.top:
+            playerleft_upspeed = -13;
+        else:
+            playerright_upspeed = -13
+
+
+
+
+
     # HÜPPAMINE
     # Vasak mängija hüpe
     if keys[pygame.K_w] and is_left_player_on_ground:  # W
@@ -178,15 +209,45 @@ while True:
         playerright_upspeed = 0
         is_right_player_on_ground = True
 
+
+    # palli porkumine mangijast
+    if (pygame.Rect.colliderect(ball_rect, playerleft_rect) and ball_rect.top < playerleft_rect.top-20) or (pygame.Rect.colliderect(ball_rect, playerright_rect) and ball_rect.top < playerright_rect.top-20):
+        if (abs(ball_speed) < 2):
+            ball_speed = 2
+        ball_upspeed = -8;
+
+        if (pygame.Rect.colliderect(ball_rect, playerleft_rect)):
+            if (playerleft_facing_goal):
+                ball_speed = abs(ball_speed)
+            else:
+                ball_speed = -abs(ball_speed)
+        else:
+            if (playerright_facing_goal):
+                ball_speed = -abs(ball_speed)
+            else:
+                ball_speed = abs(ball_speed)
+
+
+
+
     # palli porkumine seinast##########################################################
-    if ball_rect.left <= 0 or ball_rect.right >= 1280 or pygame.Rect.colliderect(ball_rect,
+    elif ball_rect.left <= 0 or ball_rect.right >= 1280 or pygame.Rect.colliderect(ball_rect,
                                                                                  playerleft_rect) or pygame.Rect.colliderect(
             ball_rect, playerright_rect):
         if ball_rect.left <= 0:
             ball_rect.left = 0;
         if ball_rect.right >= 1280:
             ball_rect.right = 1280;
+
         ball_speed = -ball_speed
+        if abs(ball_speed) > 10:
+            ball_speed /= 1.6
+        else:
+            ball_speed /= 1.3
+
+
+
+
 
     # palli porkumine varavast
     if ball_rect.right <= goalWidth or ball_rect.left >= 1280 - goalWidth:
@@ -230,7 +291,16 @@ while True:
     else:
         screen.blit(playerright_flipped_surf, playerright_rect)
 
-    screen.blit(ball_surf, ball_rect)
+    ball_rotation_angle -= ball_speed * 2
+    if ball_rotation_angle > 360:
+        ball_rotation_angle -= 360
+    elif ball_rotation_angle < 0:
+        ball_rotation_angle += 360
+
+    rotated_ball_surf = pygame.transform.rotate(ball_surf, ball_rotation_angle)
+    rotated_ball_rect = rotated_ball_surf.get_rect(center=ball_rect.center)
+
+    screen.blit(rotated_ball_surf, rotated_ball_rect)
 
     pygame.display.update()
     clock.tick(60)
