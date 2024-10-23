@@ -5,53 +5,71 @@ pygame.init()
 screen = pygame.display.set_mode((1280, 720))
 clock = pygame.time.Clock()
 
-bg_surf = pygame.image.load("Images\game_bg.png").convert()
+bg_surf = pygame.image.load("pygame-master\pygame-Player-Movement\Images\game_bg.png").convert()
 bg_surf = pygame.transform.scale(bg_surf, (1280, 720))
 
-goalleft_surf = pygame.image.load("Images\goal_left.png").convert_alpha()
+goalleft_surf = pygame.image.load("pygame-master\pygame-Player-Movement\Images\goal_left.png").convert_alpha()
 goalleft_surf = pygame.transform.scale(goalleft_surf, (238, 280))
 goalleft_rect = goalleft_surf.get_rect(midbottom=(-15, 520))
 
-goalright_surf = pygame.image.load("Images/goal_right.png").convert_alpha()
+goalright_surf = pygame.image.load("pygame-master\pygame-Player-Movement\Images/goal_right.png").convert_alpha()
 goalright_surf = pygame.transform.scale(goalright_surf, (238, 280))
 goalright_rect = goalright_surf.get_rect(midbottom=(1295, 520))
 
-playerleft_surf = pygame.image.load("Images/LeftChar.png").convert_alpha()
+playerleft_surf = pygame.image.load("pygame-master\pygame-Player-Movement\Images/LeftChar.png").convert_alpha()
 playerleft_surf = pygame.transform.scale(playerleft_surf, (75, 120))
 playerleft_rect = playerleft_surf.get_rect(midbottom=(120, 500))
+
+kickplayerleft_surf = pygame.image.load("pygame-master\pygame-Player-Movement\Images\kick_leftchar.png").convert_alpha()
+kickplayerleft_surf = pygame.transform.scale(kickplayerleft_surf, (75, 120))
+kickplayerleft_flipped_surf = pygame.transform.flip(kickplayerleft_surf, True, False)
+
+kickplayerright_surf = pygame.image.load("pygame-master\pygame-Player-Movement\Images\kick_rightchar.png").convert_alpha()
+kickplayerright_surf = pygame.transform.scale(kickplayerright_surf, (75, 120))
+kickplayerright_flipped_surf = pygame.transform.flip(kickplayerright_surf, True, False)
 
 playerleft_flipped_surf = pygame.transform.flip(playerleft_surf, True, False)
 playerleft_flipped_surf = pygame.transform.scale(playerleft_flipped_surf, (75, 120))
 
-playerright_surf = pygame.image.load("Images/RightChar.png").convert_alpha()
+playerright_surf = pygame.image.load("pygame-master/pygame-Player-Movement/Images/player.png").convert_alpha()
 playerright_surf = pygame.transform.scale(playerright_surf, (75, 120))
 playerright_rect = playerright_surf.get_rect(midbottom=(1160, 500))
 
 playerright_flipped_surf = pygame.transform.flip(playerright_surf, True, False)
 playerright_flipped_surf = pygame.transform.scale(playerright_flipped_surf, (75, 120))
 
-ball_surf = pygame.image.load("Images/soccerball.png").convert_alpha()
+ball_surf = pygame.image.load("pygame-master\pygame-Player-Movement\Images/soccerball.png").convert_alpha()
 ball_surf = pygame.transform.scale(ball_surf, (42, 42))
-ball_rect = ball_surf.get_rect(midtop=(0, 0))
+ball_startpos = (640, 20)
+ball_rect = ball_surf.get_rect(midtop=(ball_startpos))
 ball_rotation_angle = 0
 goalWidth = 150
 goalHeight = 240
 
 gravity = 0.55  # Gravitatsiooni tugevus
-jump_strength = -20
+jump_strength = -18
 playerleft_upspeed = 0  # Algne ülesliikumise kiirus
 playerright_upspeed = 0
 ball_upspeed = 15
-ball_speed = 6
+ball_speed = 0
 ball_rotation = 10
-ball_slowing = 1.09
+ball_slowing = 1.08
 is_left_player_on_ground = True
 is_right_player_on_ground = True
 is_ball_on_ground = False
 
 move_speed = 6
 playerleft_facing_goal = True
-playerright_facing_goal = True
+playerright_facing_goal = True#
+
+inGoal_left = False
+inGoal_right = False
+
+is_left_kicking = False
+left_kick_timer = 0
+is_right_kicking = False
+right_kick_timer = 0
+kick_duration = 500 
 
 while True:
     for event in pygame.event.get():
@@ -123,7 +141,7 @@ while True:
     if playerright_rect.right > 1280:
         playerright_rect.right = 1280
     elif playerright_rect.left < 0:
-        playerright_rect.left = 0;
+        playerright_rect.left = 0
 
 
     leftTouchingBallVertically = pygame.Rect.colliderect(playerleft_rect, ball_rect) and ball_rect.top > playerleft_rect.top
@@ -131,24 +149,34 @@ while True:
 
     #Mangija loomine
     if (leftTouchingBallVertically and keys[pygame.K_q]):
-        ballDir = 1;
+        ballDir = 1
         if (playerleft_facing_goal == False):
             ballDir = -1
         ball_speed = 12 * ballDir
         ball_upspeed = -14
+        is_left_kicking = True
+        left_kick_timer = pygame.time.get_ticks()
     if (rightTouchingBallVertically and keys[pygame.K_KP0]):
-        ballDir = 1;
+        ballDir = 1
         if (playerright_facing_goal == True):
             ballDir = -1
         ball_speed = 12 * ballDir
         ball_upspeed = -14
+        is_right_kicking = True
+        right_kick_timer = pygame.time.get_ticks()
+
+    if is_left_kicking and pygame.time.get_ticks() - left_kick_timer >= kick_duration:
+        is_left_kicking = False
+
+    if is_right_kicking and pygame.time.get_ticks() - right_kick_timer >= kick_duration:
+        is_right_kicking = False
 
 
     #Mängija põrkumine mängijast
     isOneOnTopOfOther = isSimpleCollide and (playerleft_rect.top > playerright_rect.top or playerright_rect.top > playerleft_rect.top)
     if isOneOnTopOfOther:
         if playerleft_rect.top < playerright_rect.top:
-            playerleft_upspeed = -13;
+            playerleft_upspeed = -13
         else:
             playerright_upspeed = -13
 
@@ -180,7 +208,7 @@ while True:
     # Vasak mangija varavas
     if playerleft_rect.right <= goalWidth or playerleft_rect.left >= 1280 - goalWidth:
         if playerleft_rect.top <= goalHeight + 20 <= playerleft_rect.bottom and playerleft_upspeed < 0:
-            playerleft_upspeed = 0;
+            playerleft_upspeed = 0
 
         elif playerleft_rect.bottom >= goalHeight >= playerleft_rect.top:
             playerleft_rect.bottom = goalHeight
@@ -190,7 +218,7 @@ while True:
     # Parem mangija varavas
     if playerright_rect.right <= goalWidth or playerright_rect.left >= 1280 - goalWidth:
         if playerright_rect.top <= goalHeight + 20 <= playerright_rect.bottom and playerright_upspeed < 0:
-            playerright_upspeed = 0;
+            playerright_upspeed = 0
 
         elif playerright_rect.bottom >= goalHeight >= playerright_rect.top:
             playerright_rect.bottom = goalHeight
@@ -214,7 +242,7 @@ while True:
     if (pygame.Rect.colliderect(ball_rect, playerleft_rect) and ball_rect.top < playerleft_rect.top-20) or (pygame.Rect.colliderect(ball_rect, playerright_rect) and ball_rect.top < playerright_rect.top-20):
         if (abs(ball_speed) < 2):
             ball_speed = 2
-        ball_upspeed = -8;
+        ball_upspeed = -8
 
         if (pygame.Rect.colliderect(ball_rect, playerleft_rect)):
             if (playerleft_facing_goal):
@@ -235,9 +263,9 @@ while True:
                                                                                  playerleft_rect) or pygame.Rect.colliderect(
             ball_rect, playerright_rect):
         if ball_rect.left <= 0:
-            ball_rect.left = 0;
+            ball_rect.left = 0
         if ball_rect.right >= 1280:
-            ball_rect.right = 1280;
+            ball_rect.right = 1280
 
         ball_speed = -ball_speed
         if abs(ball_speed) > 10:
@@ -253,7 +281,7 @@ while True:
     if ball_rect.right <= goalWidth or ball_rect.left >= 1280 - goalWidth:
 
         if ball_rect.top <= goalHeight + 20 <= ball_rect.bottom and ball_upspeed < 0:
-            ball_upspeed = 0;
+            ball_upspeed = 0
             ball_speed = ball_speed / ball_slowing
 
         elif ball_rect.bottom >= goalHeight >= ball_rect.top:
@@ -273,6 +301,17 @@ while True:
         else:
             ball_upspeed = -1 * (ball_upspeed / 1.6)
         ball_speed = ball_speed / ball_slowing
+    
+    #pall varava sees #########################################
+
+    if ball_rect.colliderect(goalleft_rect):
+        if ball_rect.right <= goalleft_rect.right and ball_rect.bottom >= goalleft_rect.top:
+            inGoal_left = True
+    
+    elif ball_rect.colliderect(goalright_rect):
+        if ball_rect.left >= goalright_rect.left and ball_rect.bottom >= goalright_rect.top:
+            inGoal_right = True
+
     ###########################################################
 
     if (abs(ball_speed) < 0.01):
@@ -281,15 +320,33 @@ while True:
     screen.blit(goalleft_surf, goalleft_rect)
     screen.blit(goalright_surf, goalright_rect)
 
-    if playerleft_facing_goal:
-        screen.blit(playerleft_surf, playerleft_rect)
-    else:
-        screen.blit(playerleft_flipped_surf, playerleft_rect)
+    #oigele poole vaatamine##################################
 
-    if playerright_facing_goal:
-        screen.blit(playerright_surf, playerright_rect)
+    # vasak mangija
+    if is_left_kicking:
+        if playerleft_facing_goal:
+            screen.blit(kickplayerleft_surf, playerleft_rect)  # Show left player kicking sprite facing right
+        else:
+            screen.blit(kickplayerleft_flipped_surf, playerleft_rect)  # Show flipped left player kicking sprite
     else:
-        screen.blit(playerright_flipped_surf, playerright_rect)
+        if playerleft_facing_goal:
+            screen.blit(playerleft_surf, playerleft_rect)  # Show normal sprite facing right
+        else:
+            screen.blit(playerleft_flipped_surf, playerleft_rect)  # Show flipped normal sprite
+
+    # parem mangija
+    if is_right_kicking:
+        if playerright_facing_goal:
+            screen.blit(kickplayerright_surf, playerright_rect)  # Show right player kicking sprite facing left
+        else:
+            screen.blit(kickplayerright_flipped_surf, playerright_rect)  # Show flipped right player kicking sprite
+    else:
+        if playerright_facing_goal:
+            screen.blit(playerright_surf, playerright_rect)  # Show normal sprite facing left
+        else:
+            screen.blit(playerright_flipped_surf, playerright_rect)  # Show flipped normal sprite
+
+    ##########################################################
 
     ball_rotation_angle -= ball_speed * 2
     if ball_rotation_angle > 360:
