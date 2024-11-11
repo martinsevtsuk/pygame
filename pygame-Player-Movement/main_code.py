@@ -38,7 +38,6 @@ playerright_rect = playerright_surf.get_rect(midbottom=(1160, 500))
 playerright_flipped_surf = pygame.transform.flip(playerright_surf, True, False)
 playerright_flipped_surf = pygame.transform.scale(playerright_flipped_surf, (75, 120))
 
-
 ball_surf = pygame.image.load("./Images/soccerball.png").convert_alpha()
 ball_surf = pygame.transform.scale(ball_surf, (42, 42))
 ball_startpos = (640, 20)
@@ -59,24 +58,16 @@ ball_slowing = 1.4
 is_left_player_on_ground = True
 is_right_player_on_ground = True
 is_ball_on_ground = False
-game_stop = False
 
 move_speed = 6
 playerleft_facing_goal = True
-playerright_facing_goal = True#
-
-inGoal_left = False
-inGoal_right = False
-score_right = 0
-score_left = 0
+playerright_facing_goal = True  #
 
 rectangle = pygame.Rect(555, 25, 170, 85)
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 
 font = pygame.font.Font(None, 100)  # None means use default font, size 36
-
-
 
 is_left_kicking = False
 left_kick_timer = 0
@@ -86,6 +77,19 @@ kick_duration = 500
 resetTimer = 100
 pygame.mixer.music.load('./music/worldcup.mp3')
 pygame.mixer.music.play(-1)
+
+inGoal_left = False
+inGoal_right = False
+score_right = 6
+score_left = 6
+
+game_stop = False
+game_running = False
+
+game_state = 'main_menu'
+
+font = pygame.font.Font(None, 100)
+
 
 def reset():
     playerright_rect.midbottom = (1160, 500)
@@ -97,42 +101,88 @@ def reset():
     ball_speed = 0
     return False
 
+def winner():
+    winner_text = font.render(gamewinner + " player wins!", True, WHITE)
+    winner_text_rect = winner_text.get_rect(center=(640, 250))
+    screen.blit(winner_text, winner_text_rect)
+
+    replay_text = font.render("Press Enter to Restart", True, WHITE)
+    replay_text_rect = replay_text.get_rect(center=(640, 450))
+    screen.blit(replay_text, replay_text_rect)
+
+############################### MAIN MENU #################################
+def draw_main_menu():
+
+    title_text = font.render("Soccer Game", True, WHITE)
+    start_text = font.render("Press Enter to Start", True, WHITE)
+
+    # Position text in the center
+    title_rect = title_text.get_rect(center=(640, 250))
+    start_rect = start_text.get_rect(center=(640, 450))
+
+    screen.blit(title_text, title_rect)
+    screen.blit(start_text, start_rect)
+
+    if keys[pygame.K_RETURN]:
+        game_state = 'game_running'
+        reset()
+
+
+##############################################################################
 while True:
+    print (game_state)
+    screen.fill(BLACK)
+
+    keys = pygame.key.get_pressed()  # Kontrollib klahvivajutusi
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
             exit()
 
-    if game_stop:
-        resetTimer -= 1
-        if resetTimer <= 0:
-            resetTimer = 60;
-            game_stop = False
-            inGoal_left = False
-            inGoal_right = False
-            ball_speed = 0;
+    if game_state == 'main_menu':
+        draw_main_menu()
+
+        if keys[pygame.K_RETURN]:
+            game_state = 'game_running'
             reset()
 
+    if score_left >= 7 or score_right >= 7:
+        game_state = 'winner_screen'
+
+    if game_state == 'winner_screen':
+        winner()
 
 
-    keys = pygame.key.get_pressed()  # Kontrollib klahvivajutusi
-    isSimpleCollide = pygame.Rect.colliderect(playerleft_rect, playerright_rect)
+    ############################### GAME LOGIC #######################################
+    elif game_state == 'game_running':
+        if game_stop:
+            resetTimer -= 1
+            if resetTimer <= 0:
+                resetTimer = 60
+                game_stop = False
+                inGoal_left = False
+                inGoal_right = False
+                ball_speed = 0
+                reset()
 
+        isSimpleCollide = pygame.Rect.colliderect(playerleft_rect, playerright_rect)
 
-
-
-    areColliding = pygame.Rect.colliderect(playerleft_rect, playerright_rect) and (
+        areColliding = pygame.Rect.colliderect(playerleft_rect, playerright_rect) and (
                 (playerleft_rect.left < playerright_rect.left and (keys[pygame.K_d] or keys[pygame.K_LEFT])) or (
-                    playerleft_rect.right > playerright_rect.right and (keys[pygame.K_a] or keys[pygame.K_RIGHT])))
-    leftTouchingBall = pygame.Rect.colliderect(playerleft_rect, ball_rect) and ((keys[pygame.K_d] and ball_rect.right > playerleft_rect.right) or (keys[pygame.K_a] and ball_rect.x < playerleft_rect.x)) and playerleft_upspeed == 0
-    rightTouchingBall = pygame.Rect.colliderect(playerright_rect, ball_rect) and ((keys[pygame.K_RIGHT] and ball_rect.left > playerright_rect.left) or (keys[pygame.K_LEFT] and ball_rect.x < playerright_rect.x)) and playerright_upspeed == 0
-    leftShift = 0
-    rightShift = 0
-    ballShift = 0
-    tempSpeed = move_speed
+                playerleft_rect.right > playerright_rect.right and (keys[pygame.K_a] or keys[pygame.K_RIGHT])))
+        leftTouchingBall = pygame.Rect.colliderect(playerleft_rect, ball_rect) and (
+                (keys[pygame.K_d] and ball_rect.right > playerleft_rect.right) or (
+                keys[pygame.K_a] and ball_rect.x < playerleft_rect.x)) and playerleft_upspeed == 0
+        rightTouchingBall = pygame.Rect.colliderect(playerright_rect, ball_rect) and (
+                (keys[pygame.K_RIGHT] and ball_rect.left > playerright_rect.left) or (
+                keys[pygame.K_LEFT] and ball_rect.x < playerright_rect.x)) and playerright_upspeed == 0
+        leftShift = 0
+        rightShift = 0
+        ballShift = 0
+        tempSpeed = move_speed
 
-    if (game_stop == False):
+        if not game_stop:
             if areColliding:
                 tempSpeed = move_speed / 1.4
                 # LIIKUMINE
@@ -174,267 +224,266 @@ while True:
             playerright_rect.x += rightShift
             ball_rect.x += ballShift
 
-    if playerleft_rect.left < 0:
-        playerleft_rect.left = 0
-    elif playerleft_rect.right > 1280:
-        playerleft_rect.right = 1280
+        if playerleft_rect.left < 0:
+            playerleft_rect.left = 0
+        elif playerleft_rect.right > 1280:
+            playerleft_rect.right = 1280
 
-    if playerright_rect.right > 1280:
-        playerright_rect.right = 1280
-    elif playerright_rect.left < 0:
-        playerright_rect.left = 0
+        if playerright_rect.right > 1280:
+            playerright_rect.right = 1280
+        elif playerright_rect.left < 0:
+            playerright_rect.left = 0
 
+        leftTouchingBallVertically = pygame.Rect.colliderect(playerleft_rect,
+                                                             ball_rect) and ball_rect.top > playerleft_rect.top
+        rightTouchingBallVertically = pygame.Rect.colliderect(playerright_rect,
+                                                              ball_rect) and ball_rect.top > playerright_rect.top
 
-    leftTouchingBallVertically = pygame.Rect.colliderect(playerleft_rect, ball_rect) and ball_rect.top > playerleft_rect.top
-    rightTouchingBallVertically = pygame.Rect.colliderect(playerright_rect, ball_rect) and ball_rect.top > playerright_rect.top
+        # Mangija loomine
+        if (game_stop == False):
+            if (leftTouchingBallVertically and keys[pygame.K_q]):
+                ballDir = 1
+                if (playerleft_facing_goal == False):
+                    ballDir = -1
+                ball_speed = 9 * ballDir
+                ball_upspeed = -14
+                left_kick_timer = pygame.time.get_ticks()
 
-    #Mangija loomine
-    if (game_stop == False):
-        if (leftTouchingBallVertically and keys[pygame.K_q]):
-            ballDir = 1
-            if (playerleft_facing_goal == False):
-                ballDir = -1
-            ball_speed = 9 * ballDir
-            ball_upspeed = -14
-            left_kick_timer = pygame.time.get_ticks()
+            if (rightTouchingBallVertically and keys[pygame.K_KP0]):
+                ballDir = 1
+                if (playerright_facing_goal == True):
+                    ballDir = -1
+                ball_speed = 9 * ballDir
+                ball_upspeed = -14
+                right_kick_timer = pygame.time.get_ticks()
 
-        if (rightTouchingBallVertically and keys[pygame.K_KP0]):
-            ballDir = 1
-            if (playerright_facing_goal == True):
-                ballDir = -1
-            ball_speed = 9 * ballDir
-            ball_upspeed = -14
-            right_kick_timer = pygame.time.get_ticks()
+            if is_left_kicking and pygame.time.get_ticks() - left_kick_timer >= kick_duration:
+                is_left_kicking = False
 
-        if is_left_kicking and pygame.time.get_ticks() - left_kick_timer >= kick_duration:
-            is_left_kicking = False
+            if is_right_kicking and pygame.time.get_ticks() - right_kick_timer >= kick_duration:
+                is_right_kicking = False
 
-        if is_right_kicking and pygame.time.get_ticks() - right_kick_timer >= kick_duration:
-            is_right_kicking = False
+        # Mängija põrkumine mängijast
+        isOneOnTopOfOther = isSimpleCollide and (
+                playerleft_rect.top > playerright_rect.top or playerright_rect.top > playerleft_rect.top)
+        if isOneOnTopOfOther:
+            if playerleft_rect.top < playerright_rect.top:
+                playerleft_upspeed = -13
+            else:
+                playerright_upspeed = -13
 
+        if (game_stop == False):
+            # HÜPPAMINE
+            # Vasak mängija hüpe
+            if keys[pygame.K_w] and is_left_player_on_ground:  # W
+                playerleft_upspeed = jump_strength
+                is_left_player_on_ground = False
 
-    #Mängija põrkumine mängijast
-    isOneOnTopOfOther = isSimpleCollide and (playerleft_rect.top > playerright_rect.top or playerright_rect.top > playerleft_rect.top)
-    if isOneOnTopOfOther:
-        if playerleft_rect.top < playerright_rect.top:
-            playerleft_upspeed = -13
-        else:
-            playerright_upspeed = -13
+            # P arem mängija hüpe
+            if keys[pygame.K_UP] and is_right_player_on_ground:  # ÜLES
+                playerright_upspeed = jump_strength
+                is_right_player_on_ground = False
 
+            if keys[pygame.K_s] and is_left_player_on_ground == False:  # W
+                playerleft_upspeed += 0.85
+            if keys[pygame.K_DOWN] and is_right_player_on_ground == False:  # W
+                playerright_upspeed += 0.85
 
+        playerleft_upspeed += gravity  # Lisab gravitatsiooni
+        playerright_upspeed += gravity
+        ball_upspeed += ball_gravity
 
+        playerleft_rect.y += playerleft_upspeed  # Liigutab vasakut mängijat
+        playerright_rect.y += playerright_upspeed  # Liigutab paremat mängijat
+        ball_rect.y += ball_upspeed
+        ball_rect.x += ball_speed
 
+        ###################################################################################################
+        # Vasak mangija varavas
+        if playerleft_rect.right <= goalWidth or playerleft_rect.left >= 1280 - goalWidth:
+            if playerleft_rect.top <= goalHeight + 20 <= playerleft_rect.bottom and playerleft_upspeed < 0:
+                playerleft_upspeed = 0
 
-    if (game_stop == False):
-    # HÜPPAMINE
-    # Vasak mängija hüpe
-        if keys[pygame.K_w] and is_left_player_on_ground:  # W
-            playerleft_upspeed = jump_strength
-            is_left_player_on_ground = False
+            elif playerleft_rect.bottom >= goalHeight >= playerleft_rect.top:
+                playerleft_rect.bottom = goalHeight
+                playerleft_upspeed = 0
+                is_left_player_on_ground = True
 
-        # P arem mängija hüpe
-        if keys[pygame.K_UP] and is_right_player_on_ground:  # ÜLES
-            playerright_upspeed = jump_strength
-            is_right_player_on_ground = False
+        # Parem mangija varavas
+        if playerright_rect.right <= goalWidth or playerright_rect.left >= 1280 - goalWidth:
+            if playerright_rect.top <= goalHeight + 20 <= playerright_rect.bottom and playerright_upspeed < 0:
+                playerright_upspeed = 0
 
-        if keys[pygame.K_s] and is_left_player_on_ground == False:  # W
-            playerleft_upspeed += 0.85
-        if keys[pygame.K_DOWN] and is_right_player_on_ground == False:  # W
-            playerright_upspeed += 0.85
+            elif playerright_rect.bottom >= goalHeight >= playerright_rect.top:
+                playerright_rect.bottom = goalHeight
+                playerright_upspeed = 0
+                is_right_player_on_ground = True
 
-    playerleft_upspeed += gravity  # Lisab gravitatsiooni
-    playerright_upspeed += gravity
-    ball_upspeed += ball_gravity
+        #################################################################################################
 
-    playerleft_rect.y += playerleft_upspeed  # Liigutab vasakut mängijat
-    playerright_rect.y += playerright_upspeed  # Liigutab paremat mängijat
-    ball_rect.y += ball_upspeed
-    ball_rect.x += ball_speed
-
-    ###################################################################################################
-    # Vasak mangija varavas
-    if playerleft_rect.right <= goalWidth or playerleft_rect.left >= 1280 - goalWidth:
-        if playerleft_rect.top <= goalHeight + 20 <= playerleft_rect.bottom and playerleft_upspeed < 0:
-            playerleft_upspeed = 0
-
-        elif playerleft_rect.bottom >= goalHeight >= playerleft_rect.top:
-            playerleft_rect.bottom = goalHeight
+        if playerleft_rect.bottom >= 500:  # Maapind vasak mängija
+            playerleft_rect.bottom = 500
             playerleft_upspeed = 0
             is_left_player_on_ground = True
 
-    # Parem mangija varavas
-    if playerright_rect.right <= goalWidth or playerright_rect.left >= 1280 - goalWidth:
-        if playerright_rect.top <= goalHeight + 20 <= playerright_rect.bottom and playerright_upspeed < 0:
-            playerright_upspeed = 0
-
-        elif playerright_rect.bottom >= goalHeight >= playerright_rect.top:
-            playerright_rect.bottom = goalHeight
+        if playerright_rect.bottom >= 500:  # Maapind parem mängija
+            playerright_rect.bottom = 500
             playerright_upspeed = 0
             is_right_player_on_ground = True
 
-    #################################################################################################
+            # palli porkumine mangijast
+        if (pygame.Rect.colliderect(ball_rect, playerleft_rect) and ball_rect.top < playerleft_rect.top - 10) or (
+                pygame.Rect.colliderect(ball_rect, playerright_rect) and ball_rect.top < playerright_rect.top - 10):
+            if (abs(ball_speed) < 4):
+                if (ball_speed < 0):
+                    ball_speed = 4;
+                else:
+                    ball_speed = 4
+            if abs(ball_upspeed) < 8:
+                ball_upspeed = -8
+            if (pygame.Rect.colliderect(ball_rect, playerleft_rect)):
+                if (playerleft_rect.centerx < ball_rect.centerx):
+                    ball_speed = -abs(ball_speed)
+                else:
+                    ball_speed = abs(ball_speed)
 
-    if playerleft_rect.bottom >= 500:  # Maapind vasak mängija
-        playerleft_rect.bottom = 500
-        playerleft_upspeed = 0
-        is_left_player_on_ground = True
-
-    if playerright_rect.bottom >= 500:  # Maapind parem mängija
-        playerright_rect.bottom = 500
-        playerright_upspeed = 0
-        is_right_player_on_ground = True
-
-        # palli porkumine mangijast
-    if (pygame.Rect.colliderect(ball_rect, playerleft_rect) and ball_rect.top < playerleft_rect.top - 10) or (
-            pygame.Rect.colliderect(ball_rect, playerright_rect) and ball_rect.top < playerright_rect.top - 10):
-        if (abs(ball_speed) < 4):
-            if (ball_speed < 0):
-                ball_speed = 4;
             else:
-                ball_speed = 4
-        if abs(ball_upspeed) < 8:
-            ball_upspeed = -8
-        if (pygame.Rect.colliderect(ball_rect, playerleft_rect)):
+                if (playerright_rect.centerx < ball_rect.centerx):
+                    ball_speed = -abs(ball_speed)
+                else:
+                    ball_speed = abs(ball_speed)
+        ##palli porkumine mangija alt
+        if pygame.Rect.colliderect(ball_rect,
+                                   playerleft_rect) and playerleft_upspeed > 0 and playerleft_rect.bottom < ball_rect.bottom:
+            dir = 1;
             if (playerleft_rect.centerx < ball_rect.centerx):
-                ball_speed = -abs(ball_speed)
-            else:
-                ball_speed = abs(ball_speed)
-
-        else:
-            if (playerright_rect.centerx < ball_rect.centerx):
-                ball_speed = -abs(ball_speed)
-            else:
-                ball_speed = abs(ball_speed)
-    ##palli porkumine mangija alt
-    if pygame.Rect.colliderect(ball_rect, playerleft_rect) and playerleft_upspeed > 0 and playerleft_rect.bottom < ball_rect.bottom:
-        dir = 1;
-        if (playerleft_rect.centerx < ball_rect.centerx):
-            dir = -1
-        ball_upspeed = 4
-        ball_speed = 8 * dir
-        playerleft_upspeed = -8;
-    if pygame.Rect.colliderect(ball_rect, playerright_rect) and playerright_upspeed > 0 and playerright_rect.bottom < ball_rect.bottom:
-        dir = 1;
-        if (playerright_rect.centerx > ball_rect.centerx):
-            dir = -1
-        ball_upspeed = 4
-        ball_speed = 8 * dir
-        playerright_upspeed = -8
+                dir = -1
+            ball_upspeed = 4
+            ball_speed = 8 * dir
+            playerleft_upspeed = -8;
+        if pygame.Rect.colliderect(ball_rect,
+                                   playerright_rect) and playerright_upspeed > 0 and playerright_rect.bottom < ball_rect.bottom:
+            dir = 1;
+            if (playerright_rect.centerx > ball_rect.centerx):
+                dir = -1
+            ball_upspeed = 4
+            ball_speed = 8 * dir
+            playerright_upspeed = -8
 
 
-    # palli porkumine seinast##########################################################
-    elif ball_rect.left <= 0 or ball_rect.right >= 1280 or pygame.Rect.colliderect(ball_rect,
-                                                                                 playerleft_rect) or pygame.Rect.colliderect(
+        # palli porkumine seinast##########################################################
+        elif ball_rect.left <= 0 or ball_rect.right >= 1280 or pygame.Rect.colliderect(ball_rect,
+                                                                                       playerleft_rect) or pygame.Rect.colliderect(
             ball_rect, playerright_rect):
-        if ball_rect.left <= 0:
-            ball_rect.left = 0
-        if ball_rect.right >= 1280:
-            ball_rect.right = 1280
+            if ball_rect.left <= 0:
+                ball_rect.left = 0
+            if ball_rect.right >= 1280:
+                ball_rect.right = 1280
 
-        ball_speed = -ball_speed
-        if abs(ball_speed) > 10:
-            ball_speed /= 1.6
-        else:
-            ball_speed /= 1.3
+            ball_speed = -ball_speed
+            if abs(ball_speed) > 10:
+                ball_speed /= 1.6
+            else:
+                ball_speed /= 1.3
 
+        # palli porkumine varavast
+        if ball_rect.right <= goalWidth or ball_rect.left >= 1280 - goalWidth:
 
+            if ball_rect.top <= goalHeight + 20 <= ball_rect.bottom and ball_upspeed < 0:
+                ball_upspeed = 0
+                ball_speed = ball_speed / ball_slowing
 
+            elif ball_rect.bottom >= goalHeight >= ball_rect.top:
+                ball_rect.bottom = goalHeight
+                if ball_upspeed <= 1.5:
+                    is_ball_on_ground = True
+                    ball_upspeed = 0
+                else:
+                    ball_upspeed = -1 * (ball_upspeed / 1.6)
 
-
-    # palli porkumine varavast
-    if ball_rect.right <= goalWidth or ball_rect.left >= 1280 - goalWidth:
-
-        if ball_rect.top <= goalHeight + 20 <= ball_rect.bottom and ball_upspeed < 0:
-            ball_upspeed = 0
-            ball_speed = ball_speed / ball_slowing
-
-        elif ball_rect.bottom >= goalHeight >= ball_rect.top:
-            ball_rect.bottom = goalHeight
+                ball_speed = ball_speed / ball_slowing
+        if ball_rect.bottom > 500:
+            ball_rect.bottom = 500
             if ball_upspeed <= 1.5:
                 is_ball_on_ground = True
                 ball_upspeed = 0
             else:
                 ball_upspeed = -1 * (ball_upspeed / 1.6)
-
             ball_speed = ball_speed / ball_slowing
-    if ball_rect.bottom > 500:
-        ball_rect.bottom = 500
-        if ball_upspeed <= 1.5:
-            is_ball_on_ground = True
-            ball_upspeed = 0
+
+        # pall varava sees #########################################
+        if game_stop == False:
+            if ball_rect.colliderect(goalleft_rect):
+                if ball_rect.right <= goalleft_rect.right and ball_rect.bottom >= goalleft_rect.top:
+                    inGoal_left = True
+                    score_right += 1
+
+
+            elif ball_rect.colliderect(goalright_rect):
+                if ball_rect.left >= goalright_rect.left and ball_rect.bottom >= goalright_rect.top:
+                    inGoal_right = True
+                    score_left += 1
+        text = font.render((str(score_left) + ' - ' + str(score_right)), True, BLACK)
+        text_rect = text.get_rect(center=rectangle.center)
+
+        if score_left >= 7:
+            gamewinner = 'Left'
+        elif score_right >= 7:
+            gamewinner = 'Right'
+
+        ###########################################################
+
+        if (abs(ball_speed) < 0.01):
+            ball_speed = 0
+        screen.blit(bg_surf, (0, 0))
+        screen.blit(goalleft_surf, goalleft_rect)
+        screen.blit(goalright_surf, goalright_rect)
+
+        # oigele poole vaatamine##################################
+
+        # vasak mangija
+        if keys[pygame.K_q]:
+            if playerleft_facing_goal:
+                screen.blit(kickplayerleft_surf, playerleft_rect)  # Show left player kicking sprite facing right
+            else:
+                screen.blit(kickplayerleft_flipped_surf, playerleft_rect)  # Show flipped left player kicking sprite
         else:
-            ball_upspeed = -1 * (ball_upspeed / 1.6)
-        ball_speed = ball_speed / ball_slowing
+            if playerleft_facing_goal:
+                screen.blit(playerleft_surf, playerleft_rect)  # Show normal sprite facing right
+            else:
+                screen.blit(playerleft_flipped_surf, playerleft_rect)  # Show flipped normal sprite
 
-    #pall varava sees #########################################
-    if game_stop == False:
-        if ball_rect.colliderect(goalleft_rect):
-            if ball_rect.right <= goalleft_rect.right and ball_rect.bottom >= goalleft_rect.top:
-                inGoal_left = True
-                score_right += 1
-
-
-        elif ball_rect.colliderect(goalright_rect):
-            if ball_rect.left >= goalright_rect.left and ball_rect.bottom >= goalright_rect.top:
-                inGoal_right = True
-                score_left += 1
-    text = font.render((str(score_left) + ' - ' + str(score_right)), True, BLACK)
-    text_rect = text.get_rect(center=rectangle.center)
-    ###########################################################
-
-    if (abs(ball_speed) < 0.01):
-        ball_speed = 0
-    screen.blit(bg_surf, (0, 0))
-    screen.blit(goalleft_surf, goalleft_rect)
-    screen.blit(goalright_surf, goalright_rect)
-
-    #oigele poole vaatamine##################################
-
-    # vasak mangija
-    if keys[pygame.K_q] :
-        if playerleft_facing_goal:
-            screen.blit(kickplayerleft_surf, playerleft_rect)  # Show left player kicking sprite facing right
+        # parem mangija
+        if keys[pygame.K_KP0]:
+            if playerright_facing_goal:
+                screen.blit(kickplayerright_surf, playerright_rect)  # Show right player kicking sprite facing left
+            else:
+                screen.blit(kickplayerright_flipped_surf, playerright_rect)  # Show flipped right player kicking sprite
         else:
-            screen.blit(kickplayerleft_flipped_surf, playerleft_rect)  # Show flipped left player kicking sprite
-    else:
-        if playerleft_facing_goal:
-            screen.blit(playerleft_surf, playerleft_rect)  # Show normal sprite facing right
-        else:
-            screen.blit(playerleft_flipped_surf, playerleft_rect)  # Show flipped normal sprite
+            if playerright_facing_goal:
+                screen.blit(playerright_surf, playerright_rect)  # Show normal sprite facing left
+            else:
+                screen.blit(playerright_flipped_surf, playerright_rect)  # Show flipped normal sprite
 
-    # parem mangija
-    if keys[pygame.K_KP0]:
-        if playerright_facing_goal:
-            screen.blit(kickplayerright_surf, playerright_rect)  # Show right player kicking sprite facing left
-        else:
-            screen.blit(kickplayerright_flipped_surf, playerright_rect)  # Show flipped right player kicking sprite
-    else:
-        if playerright_facing_goal:
-            screen.blit(playerright_surf, playerright_rect)  # Show normal sprite facing left
-        else:
-            screen.blit(playerright_flipped_surf, playerright_rect)  # Show flipped normal sprite
+        ##########################################################
 
-    ##########################################################
+        # Pall väravas
+        if inGoal_right or inGoal_left:
+            game_stop = True;
 
-    #Pall väravas
-    if inGoal_right or inGoal_left:
-        game_stop = True;
+        ball_rotation_angle -= ball_speed * 2
+        if ball_rotation_angle > 360:
+            ball_rotation_angle -= 360
+        elif ball_rotation_angle < 0:
+            ball_rotation_angle += 360
 
+        rotated_ball_surf = pygame.transform.rotate(ball_surf, ball_rotation_angle)
+        rotated_ball_rect = rotated_ball_surf.get_rect(center=ball_rect.center)
 
+        screen.blit(rotated_ball_surf, rotated_ball_rect)
 
-    ball_rotation_angle -= ball_speed * 2
-    if ball_rotation_angle > 360:
-        ball_rotation_angle -= 360
-    elif ball_rotation_angle < 0:
-        ball_rotation_angle += 360
-
-    rotated_ball_surf = pygame.transform.rotate(ball_surf, ball_rotation_angle)
-    rotated_ball_rect = rotated_ball_surf.get_rect(center=ball_rect.center)
-
-    screen.blit(rotated_ball_surf, rotated_ball_rect)
-
-    pygame.draw.rect(screen, WHITE, rectangle)
-    screen.blit(text, text_rect)
+        pygame.draw.rect(screen, WHITE, rectangle)
+        screen.blit(text, text_rect)
 
     pygame.display.update()
     clock.tick(60)
