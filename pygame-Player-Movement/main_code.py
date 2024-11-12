@@ -1,44 +1,45 @@
 import pygame
 from sys import exit
+import time
 
 pygame.init()
 screen = pygame.display.set_mode((1280, 720))
 clock = pygame.time.Clock()
 
-bg_surf = pygame.image.load("./Images/game_bg.png").convert()
+bg_surf = pygame.image.load("pygame-Player-Movement\Images\game_bg.png").convert()
 bg_surf = pygame.transform.scale(bg_surf, (1280, 720))
 
-goalleft_surf = pygame.image.load("./Images/goal_left.png").convert_alpha()
+goalleft_surf = pygame.image.load("pygame-Player-Movement\Images\goal_left.png").convert_alpha()
 goalleft_surf = pygame.transform.scale(goalleft_surf, (238, 280))
 goalleft_rect = goalleft_surf.get_rect(midbottom=(-15, 520))
 
-goalright_surf = pygame.image.load("./Images/goal_right.png").convert_alpha()
+goalright_surf = pygame.image.load("pygame-Player-Movement\Images\goal_right.png").convert_alpha()
 goalright_surf = pygame.transform.scale(goalright_surf, (238, 280))
 goalright_rect = goalright_surf.get_rect(midbottom=(1295, 520))
 
-playerleft_surf = pygame.image.load("./Images/LeftChar.png").convert_alpha()
+playerleft_surf = pygame.image.load("pygame-Player-Movement\Images\LeftChar.png").convert_alpha()
 playerleft_surf = pygame.transform.scale(playerleft_surf, (75, 120))
 playerleft_rect = playerleft_surf.get_rect(midbottom=(120, 500))
 
-kickplayerleft_surf = pygame.image.load("./Images/kick_leftchar.png").convert_alpha()
+kickplayerleft_surf = pygame.image.load("pygame-Player-Movement\Images\kick_leftchar.png").convert_alpha()
 kickplayerleft_surf = pygame.transform.scale(kickplayerleft_surf, (75, 120))
 kickplayerleft_flipped_surf = pygame.transform.flip(kickplayerleft_surf, True, False)
 
-kickplayerright_surf = pygame.image.load("./Images/kick_rightchar.png").convert_alpha()
+kickplayerright_surf = pygame.image.load("pygame-Player-Movement\Images\kick_rightchar.png").convert_alpha()
 kickplayerright_surf = pygame.transform.scale(kickplayerright_surf, (75, 120))
 kickplayerright_flipped_surf = pygame.transform.flip(kickplayerright_surf, True, False)
 
 playerleft_flipped_surf = pygame.transform.flip(playerleft_surf, True, False)
 playerleft_flipped_surf = pygame.transform.scale(playerleft_flipped_surf, (75, 120))
 
-playerright_surf = pygame.image.load("./Images/player.png").convert_alpha()
+playerright_surf = pygame.image.load("pygame-Player-Movement\Images\player.png").convert_alpha()
 playerright_surf = pygame.transform.scale(playerright_surf, (75, 120))
 playerright_rect = playerright_surf.get_rect(midbottom=(1160, 500))
 
 playerright_flipped_surf = pygame.transform.flip(playerright_surf, True, False)
 playerright_flipped_surf = pygame.transform.scale(playerright_flipped_surf, (75, 120))
 
-ball_surf = pygame.image.load("./Images/soccerball.png").convert_alpha()
+ball_surf = pygame.image.load("pygame-Player-Movement\Images\soccerball.png").convert_alpha()
 ball_surf = pygame.transform.scale(ball_surf, (42, 42))
 ball_startpos = (640, 20)
 ball_rect = ball_surf.get_rect(midtop=(ball_startpos))
@@ -61,13 +62,15 @@ is_ball_on_ground = False
 
 move_speed = 6
 playerleft_facing_goal = True
-playerright_facing_goal = True  #
+playerright_facing_goal = True
 
 rectangle = pygame.Rect(555, 25, 170, 85)
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
+GREEN = (0, 255, 0)
+RED = (255, 0, 0)
 
-font = pygame.font.Font(None, 100)  # None means use default font, size 36
+font = pygame.font.Font(None, 74)
 
 is_left_kicking = False
 left_kick_timer = 0
@@ -75,23 +78,48 @@ is_right_kicking = False
 right_kick_timer = 0
 kick_duration = 500
 resetTimer = 100
-pygame.mixer.music.load('./music/worldcup.mp3')
+pygame.mixer.music.load('pygame-Player-Movement\music\worldcup.mp3')
 pygame.mixer.music.play(-1)
+pygame.mixer.music.set_volume(0.5)
 
 inGoal_left = False
 inGoal_right = False
 score_right = 6
 score_left = 6
+gamewinner = 'ishowspeed'
 
 game_stop = False
 game_running = False
 
 game_state = 'main_menu'
 
-font = pygame.font.Font(None, 100)
+button_width = 200
+button_height = 50
+increase_button_rect = pygame.Rect(100, 300, button_width, button_height)
+decrease_button_rect = pygame.Rect(100, 400, button_width, button_height)
+volume_master = 0.5
+last_volume_change_time = 0
+volume_change_cooldown = 0.1
+########################################################################
+def handle_button_clicks():
+    global volume_master, last_volume_change_time
+    mouse_x, mouse_y = pygame.mouse.get_pos()
+    current_time = time.time()
+    if current_time - last_volume_change_time >= volume_change_cooldown:
+        if increase_button_rect.collidepoint(mouse_x, mouse_y):
+            if pygame.mouse.get_pressed()[0]:
+                # If the increase button is clicked, increase the volume by 0.1
+                volume_master = min(volume_master + 0.1, 1.0)  # Max volume is 1.0
+                pygame.mixer.music.set_volume(volume_master)
+                last_volume_change_time = current_time
+        elif decrease_button_rect.collidepoint(mouse_x, mouse_y):
+            if pygame.mouse.get_pressed()[0]:
+            # If the decrease button is clicked, decrease the volume by 0.1
+                volume_master = max(volume_master - 0.1, 0.0)  # Min volume is 0.0
+                pygame.mixer.music.set_volume(volume_master)
+                last_volume_change_time = current_time
 
-
-def reset():
+def resetpos(): # paneb mängijad ja palli algpositsioonile
     playerright_rect.midbottom = (1160, 500)
     playerleft_rect.midbottom = (120, 500)
     ball_rect.midbottom = ball_startpos
@@ -101,7 +129,7 @@ def reset():
     ball_speed = 0
     return False
 
-def winner():
+def winner(): # näitab võitja nime, restart võimalus
     winner_text = font.render(gamewinner + " player wins!", True, WHITE)
     winner_text_rect = winner_text.get_rect(center=(640, 250))
     screen.blit(winner_text, winner_text_rect)
@@ -110,9 +138,8 @@ def winner():
     replay_text_rect = replay_text.get_rect(center=(640, 450))
     screen.blit(replay_text, replay_text_rect)
 
-############################### MAIN MENU #################################
-def draw_main_menu():
-
+def draw_main_menu(): # MAIN MENU
+    font = pygame.font.SysFont('Arial', 50)
     title_text = font.render("Soccer Game", True, WHITE)
     start_text = font.render("Press Enter to Start", True, WHITE)
 
@@ -123,48 +150,35 @@ def draw_main_menu():
     screen.blit(title_text, title_rect)
     screen.blit(start_text, start_rect)
 
-    if keys[pygame.K_RETURN]:
-        game_state = 'game_running'
-        reset()
+    handle_button_clicks()
+    
+    # Draw buttons
+    pygame.draw.rect(screen, GREEN, increase_button_rect)
+    pygame.draw.rect(screen, RED, decrease_button_rect)
 
+    # Draw button text
+    font = pygame.font.Font(None, 36)
+    increase_text = font.render('+ Volume', True, WHITE)
+    decrease_text = font.render('- Volume', True, WHITE)
+    screen.blit(increase_text, (increase_button_rect.x + 20, increase_button_rect.y + 10))
+    screen.blit(decrease_text, (decrease_button_rect.x + 20, decrease_button_rect.y + 10))
 
-##############################################################################
-while True:
-    print (game_state)
-    screen.fill(BLACK)
+    # Display the current volume (for visual feedback)
+    volume_text = font.render(f'Volume: {int(volume_master * 100)}%', True, WHITE)
+    screen.blit(volume_text, (50, 50))
 
-    keys = pygame.key.get_pressed()  # Kontrollib klahvivajutusi
-
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            exit()
-
-    if game_state == 'main_menu':
-        draw_main_menu()
-
-        if keys[pygame.K_RETURN]:
-            game_state = 'game_running'
-            reset()
-
-    if score_left >= 7 or score_right >= 7:
-        game_state = 'winner_screen'
-
-    if game_state == 'winner_screen':
-        winner()
-
-
-    ############################### GAME LOGIC #######################################
-    elif game_state == 'game_running':
+   ##################################################################### GAME LOGIC ############################################################################
+def play():
+        global game_stop, inGoal_left, inGoal_right, resetTimer, ball_speed, score_left, score_right, gamewinner, is_left_player_on_ground, is_right_player_on_ground, is_ball_on_ground, is_left_kicking, is_right_kicking, playerleft_upspeed, playerright_upspeed, ball_upspeed, playerleft_facing_goal, playerright_facing_goal, ball_rotation_angle
         if game_stop:
-            resetTimer -= 1
-            if resetTimer <= 0:
+                resetTimer -= 1
+        if resetTimer <= 0:
                 resetTimer = 60
                 game_stop = False
                 inGoal_left = False
                 inGoal_right = False
                 ball_speed = 0
-                reset()
+                resetpos()
 
         isSimpleCollide = pygame.Rect.colliderect(playerleft_rect, playerright_rect)
 
@@ -430,7 +444,6 @@ while True:
             gamewinner = 'Left'
         elif score_right >= 7:
             gamewinner = 'Right'
-
         ###########################################################
 
         if (abs(ball_speed) < 0.01):
@@ -469,7 +482,7 @@ while True:
 
         # Pall väravas
         if inGoal_right or inGoal_left:
-            game_stop = True;
+            game_stop = True
 
         ball_rotation_angle -= ball_speed * 2
         if ball_rotation_angle > 360:
@@ -484,6 +497,40 @@ while True:
 
         pygame.draw.rect(screen, WHITE, rectangle)
         screen.blit(text, text_rect)
+
+##########################################################################################################################################################
+
+while True:
+    print (game_state)
+    screen.fill(BLACK)
+
+    keys = pygame.key.get_pressed()  # Kontrollib klahvivajutusi
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            exit()
+
+    if game_state == 'main_menu':
+        draw_main_menu()
+        if keys[pygame.K_RETURN]:
+            score_left = 0   # Reset left score
+            score_right = 0  # Reset right score
+            resetpos()       # Reset player positions and ball position
+            game_state = 'game_running'
+    
+    if game_state == 'winner_screen':
+        winner()
+        if keys[pygame.K_RETURN]:
+            score_left = 0   # Reset left score
+            score_right = 0  # Reset right score
+            resetpos()       # Reset player positions and ball position
+            game_state = 'game_running'
+    
+    if game_state == 'game_running':
+        play()
+        if score_left >= 7 or score_right >= 7:
+            game_state = 'winner_screen'
 
     pygame.display.update()
     clock.tick(60)
