@@ -191,6 +191,21 @@ def draw_main_menu(): # Põhimenüü
     volume_text = font.render(f'Volume: {int(volume_master * 100)}%', True, WHITE)
     screen.blit(volume_text, (50, 50))
 
+def pause_menu():
+
+    blurred_snapshot = apply_blur(game_snapshot)  # Blur the snapshot
+
+    # Display the blurred background
+    screen.blit(blurred_snapshot, (0, 0))
+
+    # Display pause menu text
+    title_text = font.render("Soccer Game", True, BLACK)
+    title_rect = title_text.get_rect(center=(640, 250))
+    screen.blit(title_text, title_rect)
+
+    pause_text = font.render("Paused", True, BLACK)
+    pause_text_rect = pause_text.get_rect(center=(640, 450))
+    screen.blit(pause_text, pause_text_rect)
    ##################################################################### GAME LOGIC ############################################################################
 def play():
         global game_stop, inGoal_left, inGoal_right, resetTimer, ball_speed, score_left, score_right, gamewinner, is_left_player_on_ground, is_right_player_on_ground, is_ball_on_ground, is_left_kicking, is_right_kicking, playerleft_upspeed, playerright_upspeed, ball_upspeed, playerleft_facing_goal, playerright_facing_goal, ball_rotation_angle, left_kick_timer, right_kick_timer, kick_cooldown
@@ -570,29 +585,41 @@ while True:
             pygame.quit()
             exit()
 
-    #Põhimenüü
+    # Põhimenüü
     if game_state == 'main_menu':
-        draw_main_menu()
         if keys[pygame.K_RETURN]:
-            score_left = 0   
-            score_right = 0  
-            resetpos()       
+            score_left = 0
+            score_right = 0
+            resetpos()
             game_state = 'game_running'
-    
+        draw_main_menu()
+
     # Mäng läbi
     if game_state == 'winner_screen':
-        winner()
         if keys[pygame.K_RETURN]:
-            score_left = 0   
-            score_right = 0  
-            resetpos()      
+            score_left = 0
+            score_right = 0
+            resetpos()
             game_state = 'game_running'
-    
+        winner()
+
+
+
     # Mäng käib
     if game_state == 'game_running':
-        play()
         if score_left >= 7 or score_right >= 7:
             game_state = 'winner_screen'
+        play()
+        if keys[pygame.K_ESCAPE]:
+            game_snapshot = screen.copy()
+            game_state = 'pause_menu'
+
+
+    #paus
+    if game_state == 'pause_menu':
+        if keys[pygame.K_RETURN]:
+            game_state = 'game_running'
+        pause_menu()
 
     pygame.display.update()
     clock.tick(60)
