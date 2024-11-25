@@ -75,7 +75,7 @@ goalWidth = 150
 goalHeight = 240
 
 # Liikumine
-gravity = 1.25
+gravity = 1.1
 ball_gravity = 0.6
 jump_strength = -19.5
 playerleft_upspeed = 0  # Algne ülesliikumise kiirus
@@ -213,14 +213,17 @@ def play():
                 (playerleft_rect.left < playerright_rect.left and (keys[pygame.K_d] or keys[pygame.K_LEFT])) or (
                 playerleft_rect.right > playerright_rect.right and (keys[pygame.K_a] or keys[pygame.K_RIGHT])))
       
-        # Kas mängijad puutuvad palli      
-        leftTouchingBall = pygame.Rect.colliderect(playerleft_rect, ball_rect) and (
+        # Kas mängijad puutuvad palli
+        leftTouchingBall = pygame.Rect.colliderect(playerleft_rect, ball_rect)
+        rightTuchingBall = pygame.Rect.colliderect(playerright_rect, ball_rect)
+        leftTouchingBallAndMoving = leftTouchingBall and (
                 (keys[pygame.K_d] and ball_rect.right > playerleft_rect.right) or (
                 keys[pygame.K_a] and ball_rect.x < playerleft_rect.x)) and playerleft_upspeed == 0
-        rightTouchingBall = pygame.Rect.colliderect(playerright_rect, ball_rect) and (
+        rightTouchingBallAndMoving = rightTuchingBall and (
                 (keys[pygame.K_RIGHT] and ball_rect.left > playerright_rect.left) or (
                 keys[pygame.K_LEFT] and ball_rect.x < playerright_rect.x)) and playerright_upspeed == 0
-        
+
+
         # Liikumise muutujad
         leftShift = 0
         rightShift = 0
@@ -238,7 +241,7 @@ def play():
                 if areColliding:
                     rightShift += tempSpeed
 
-                if leftTouchingBall:
+                if leftTouchingBallAndMoving or (areColliding and rightTuchingBall):
                     ballShift += tempSpeed
 
                 playerleft_facing_goal = True
@@ -247,7 +250,7 @@ def play():
                 leftShift += -tempSpeed
                 if areColliding:
                     rightShift += -tempSpeed
-                if leftTouchingBall:
+                if leftTouchingBallAndMoving or (areColliding and rightTuchingBall):
                     ballShift -= tempSpeed
                 playerleft_facing_goal = False
 
@@ -256,7 +259,7 @@ def play():
                 rightShift += tempSpeed
                 if areColliding:
                     leftShift += tempSpeed
-                if rightTouchingBall:
+                if rightTouchingBallAndMoving or (areColliding and leftTouchingBall):
                     ballShift += tempSpeed
                 playerright_facing_goal = False
 
@@ -264,7 +267,7 @@ def play():
                 rightShift += - tempSpeed
                 if areColliding:
                     leftShift += -tempSpeed
-                if rightTouchingBall:
+                if rightTouchingBallAndMoving or (areColliding and leftTouchingBall):
                     ballShift -= tempSpeed
                 playerright_facing_goal = True
 
@@ -395,15 +398,17 @@ def play():
             is_right_player_on_ground = True
 
             # palli porkumine mangijast
-        if (pygame.Rect.colliderect(ball_rect, playerleft_rect) and ball_rect.top < playerleft_rect.top - 10) or (
-                pygame.Rect.colliderect(ball_rect, playerright_rect) and ball_rect.top < playerright_rect.top - 10):
+        if (pygame.Rect.colliderect(playerleft_rect, ball_rect) and ball_rect.top < playerleft_rect.top - 10) or (
+                pygame.Rect.colliderect(playerright_rect, ball_rect) and ball_rect.top < playerright_rect.top - 10):
             if (abs(ball_speed) < 4):
                 if (ball_speed < 0):
                     ball_speed = 4
                 else:
                     ball_speed = 4
-            if abs(ball_upspeed) < 8:
-                ball_upspeed = -8
+            ball_upspeed = abs(ball_upspeed) * -1
+            if abs(ball_upspeed) < 10:
+                ball_upspeed = -10
+
             if (pygame.Rect.colliderect(ball_rect, playerleft_rect)):
                 if (playerleft_rect.centerx < ball_rect.centerx):
                     ball_speed = -abs(ball_speed)
