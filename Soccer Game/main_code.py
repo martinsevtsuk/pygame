@@ -3,7 +3,6 @@ from sys import exit
 import time
 import os
 
-# Põhikaust piltide ja muusikaga
 base_dir = "Game Files"
 images_dir = os.path.join(base_dir, "Images")
 music_dir = os.path.join(base_dir, "music")
@@ -27,31 +26,31 @@ goalright_rect = goalright_surf.get_rect(midbottom=(1295, 520))
 
 # Vasaku mängija pildid
 playerleft_surf = pygame.image.load(os.path.join(images_dir, "LeftChar.png")).convert_alpha()
-playerleft_surf = pygame.transform.scale(playerleft_surf, (75, 120))
-playerleft_rect = playerleft_surf.get_rect(midbottom=(120, 500))
+playerleft_surf = pygame.transform.scale(playerleft_surf, (80, 125))
+playerleft_rect = playerleft_surf.get_rect(midbottom=(130, 500))
 
 kickplayerleft_surf = pygame.image.load(os.path.join(images_dir, "kick_leftchar.png")).convert_alpha()
-kickplayerleft_surf = pygame.transform.scale(kickplayerleft_surf, (75, 120))
+kickplayerleft_surf = pygame.transform.scale(kickplayerleft_surf, (80, 125))
 kickplayerleft_flipped_surf = pygame.transform.flip(kickplayerleft_surf, True, False)
 
 playerleft_flipped_surf = pygame.transform.flip(playerleft_surf, True, False)
-playerleft_flipped_surf = pygame.transform.scale(playerleft_flipped_surf, (75, 120))
+playerleft_flipped_surf = pygame.transform.scale(playerleft_flipped_surf, (80, 125))
 
 # Parema mängija pildid
 playerright_surf = pygame.image.load(os.path.join(images_dir, "player.png")).convert_alpha()
-playerright_surf = pygame.transform.scale(playerright_surf, (75, 120))
+playerright_surf = pygame.transform.scale(playerright_surf, (80, 125))
 playerright_rect = playerright_surf.get_rect(midbottom=(1160, 500))
 
 kickplayerright_surf = pygame.image.load(os.path.join(images_dir, "kick_rightchar.png")).convert_alpha()
-kickplayerright_surf = pygame.transform.scale(kickplayerright_surf, (75, 120))
+kickplayerright_surf = pygame.transform.scale(kickplayerright_surf, (80, 125))
 kickplayerright_flipped_surf = pygame.transform.flip(kickplayerright_surf, True, False)
 
 playerright_flipped_surf = pygame.transform.flip(playerright_surf, True, False)
-playerright_flipped_surf = pygame.transform.scale(playerright_flipped_surf, (75, 120))  
+playerright_flipped_surf = pygame.transform.scale(playerright_flipped_surf, (80, 125))
 
 # Pall
 ball_surf = pygame.image.load(os.path.join(images_dir, "soccerball.png")).convert_alpha()
-ball_surf = pygame.transform.scale(ball_surf, (42, 42))
+ball_surf = pygame.transform.scale(ball_surf, (54, 54))
 
 # Muusika
 pygame.mixer.music.load(os.path.join(music_dir, "worldcup.mp3"))
@@ -67,6 +66,8 @@ RED = (255, 0, 0)
 rectangle = pygame.Rect(555, 25, 170, 85)
 
 font = pygame.font.Font(None, 74)
+shadow_color = (0, 0, 0)
+shadow_offset = (3, 3)
 
 ball_startpos = (640, 20)
 ball_rect = ball_surf.get_rect(midtop=(ball_startpos))
@@ -124,6 +125,24 @@ last_volume_change_time = 0
 volume_change_cooldown = 0.1
 
 ########################################################################
+def draw_text_with_shadow(surface, text, font, color, pos, shadow_color=(0, 0, 0), shadow_offset=(2, 2)):
+    #Parameters:
+    #- surface: The Pygame surface to draw on.
+    #- text: The text to render.
+    #- font: The Pygame font object.
+    #- color: The color of the main text.
+    #- pos: A tuple (x, y) for the position of the text.
+    #- shadow_color: The color of the shadow (default is black).
+    #- shadow_offset: A tuple (x_offset, y_offset) for the shadow's offset (default is (2, 2)).
+
+    # Render the shadow text
+    shadow_text = font.render(text, True, shadow_color)
+    shadow_pos = (pos[0] + shadow_offset[0], pos[1] + shadow_offset[1])
+    surface.blit(shadow_text, shadow_pos)
+
+    # Render the main text on top of the shadow
+    main_text = font.render(text, True, color)
+    surface.blit(main_text, pos)
 
 def handle_button_clicks():
     global volume_master, last_volume_change_time
@@ -191,6 +210,20 @@ def draw_main_menu(): # Põhimenüü
     volume_text = font.render(f'Volume: {int(volume_master * 100)}%', True, WHITE)
     screen.blit(volume_text, (50, 50))
 
+def apply_blur(surface, scale_factor=0.1):
+    """Applies a blur effect to the given surface."""
+    # Get the dimensions of the surface
+    small_width = int(surface.get_width() * scale_factor)
+    small_height = int(surface.get_height() * scale_factor)
+
+    # Scale down
+    small_surface = pygame.transform.scale(surface, (small_width, small_height))
+
+    # Scale up
+    blurred_surface = pygame.transform.scale(small_surface, surface.get_size())
+
+    return blurred_surface
+
 def pause_menu():
 
     blurred_snapshot = apply_blur(game_snapshot)  # Blur the snapshot
@@ -199,16 +232,16 @@ def pause_menu():
     screen.blit(blurred_snapshot, (0, 0))
 
     # Display pause menu text
-    title_text = font.render("Soccer Game", True, BLACK)
-    title_rect = title_text.get_rect(center=(640, 250))
-    screen.blit(title_text, title_rect)
+    title_text = 'Soccer Game'
+    pause_text = 'Paused'
 
-    pause_text = font.render("Paused", True, BLACK)
-    pause_text_rect = pause_text.get_rect(center=(640, 450))
-    screen.blit(pause_text, pause_text_rect)
+    draw_text_with_shadow(screen, pause_text, font, WHITE, (545, 360), shadow_color, shadow_offset)
+    draw_text_with_shadow(screen, title_text, font, WHITE, (480, 250), shadow_color, shadow_offset)
    ##################################################################### GAME LOGIC ############################################################################
 def play():
         global game_stop, inGoal_left, inGoal_right, resetTimer, ball_speed, score_left, score_right, gamewinner, is_left_player_on_ground, is_right_player_on_ground, is_ball_on_ground, is_left_kicking, is_right_kicking, playerleft_upspeed, playerright_upspeed, ball_upspeed, playerleft_facing_goal, playerright_facing_goal, ball_rotation_angle, left_kick_timer, right_kick_timer, kick_cooldown
+        isSimpleCollide = pygame.Rect.colliderect(playerleft_rect, playerright_rect)
+        isOneOnTopOfOther = isSimpleCollide and (playerleft_rect.top > playerright_rect.top or playerright_rect.top > playerleft_rect.top)
         # Kui värav, siis kõik algpositsioonidele
         if game_stop:
                 resetTimer -= 1
@@ -249,7 +282,7 @@ def play():
         if not game_stop:
             if areColliding:
                 tempSpeed = move_speed / 1.4
-                
+
             # Vasak mängija liikumine
             if keys[pygame.K_d]:
                 leftShift += tempSpeed
@@ -259,6 +292,8 @@ def play():
                 if leftTouchingBallAndMoving or (areColliding and rightTuchingBall):
                     ballShift += tempSpeed
 
+                if playerleft_upspeed != 0 and playerleft_facing_goal:
+                    leftShift += 1.5
                 playerleft_facing_goal = True
 
             if keys[pygame.K_a]:
@@ -267,6 +302,8 @@ def play():
                     rightShift += -tempSpeed
                 if leftTouchingBallAndMoving or (areColliding and rightTuchingBall):
                     ballShift -= tempSpeed
+                if playerleft_upspeed != 0 and playerleft_facing_goal:
+                    leftShift -= 1.5
                 playerleft_facing_goal = False
 
             # Parem mängija liikumine
@@ -276,21 +313,25 @@ def play():
                     leftShift += tempSpeed
                 if rightTouchingBallAndMoving or (areColliding and leftTouchingBall):
                     ballShift += tempSpeed
+                if playerright_upspeed != 0 and playerright_facing_goal:
+                    rightShift += 1.5
                 playerright_facing_goal = False
 
             if keys[pygame.K_LEFT]:
-                rightShift += - tempSpeed
+                rightShift -= tempSpeed
                 if areColliding:
                     leftShift += -tempSpeed
                 if rightTouchingBallAndMoving or (areColliding and leftTouchingBall):
                     ballShift -= tempSpeed
+                if playerright_upspeed != 0 and playerright_facing_goal:
+                    rightShift -= 1.5
                 playerright_facing_goal = True
 
             # Liigutamine kokkupuutel
             playerleft_rect.x += leftShift
             playerright_rect.x += rightShift
-            ball_rect.x += ballShift
 
+            ball_rect.x += ballShift
         # Piirangud, et mängijad ei läheks ekraanist välja
         if playerleft_rect.left < 0:
             playerleft_rect.left = 0
