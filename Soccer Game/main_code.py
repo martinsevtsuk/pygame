@@ -6,14 +6,19 @@ import os
 base_dir = "Game Files"
 images_dir = os.path.join(base_dir, "Images")
 music_dir = os.path.join(base_dir, "music")
+fonts_dir = os.path.join(base_dir, "Fonts")
 
 pygame.init()
 screen = pygame.display.set_mode((1280, 720))
 clock = pygame.time.Clock()
 
-# Taustpilt
+# Taustapilt
 bg_surf = pygame.image.load(os.path.join(images_dir, "game_bg.png")).convert()
 bg_surf = pygame.transform.scale(bg_surf, (1280, 720))
+
+# Menüü taustapilt
+menuBackground_surf = pygame.image.load(os.path.join(images_dir, "MenuBackground.jpg")).convert()
+menuBackground_surf = pygame.transform.scale(menuBackground_surf, (1280, 720))
 
 # Väravad
 goalleft_surf = pygame.image.load(os.path.join(images_dir, "goal_left.png")).convert_alpha()
@@ -65,7 +70,9 @@ RED = (255, 0, 0)
 
 rectangle = pygame.Rect(555, 25, 170, 85)
 
-font = pygame.font.Font(None, 74)
+font = pygame.font.Font((os.path.join(fonts_dir, "Sports.ttf")), 40)
+smallfont = pygame.font.Font((os.path.join(fonts_dir, "Sports.ttf")), 20)
+scorefont = pygame.font.Font((os.path.join(fonts_dir, "Sports.ttf")), 69)
 shadow_color = (0, 0, 0)
 shadow_offset = (3, 3)
 
@@ -126,14 +133,6 @@ volume_change_cooldown = 0.1
 
 ########################################################################
 def draw_text_with_shadow(surface, text, font, color, pos, shadow_color=(0, 0, 0), shadow_offset=(2, 2)):
-    #Parameters:
-    #- surface: The Pygame surface to draw on.
-    #- text: The text to render.
-    #- font: The Pygame font object.
-    #- color: The color of the main text.
-    #- pos: A tuple (x, y) for the position of the text.
-    #- shadow_color: The color of the shadow (default is black).
-    #- shadow_offset: A tuple (x_offset, y_offset) for the shadow's offset (default is (2, 2)).
 
     # Render the shadow text
     shadow_text = font.render(text, True, shadow_color)
@@ -182,7 +181,7 @@ def winner(): # näitab võitja nime, restart võimalus
     screen.blit(replay_text, replay_text_rect)
 
 def draw_main_menu(): # Põhimenüü
-    font = pygame.font.SysFont('Arial', 50)
+    global font
     title_text = font.render("Soccer Game", True, WHITE)
     start_text = font.render("Press Enter to Start", True, WHITE)
 
@@ -190,25 +189,26 @@ def draw_main_menu(): # Põhimenüü
     title_rect = title_text.get_rect(center=(640, 250))
     start_rect = start_text.get_rect(center=(640, 450))
 
+    screen.blit(menuBackground_surf, (0, 0))
     screen.blit(title_text, title_rect)
     screen.blit(start_text, start_rect)
 
     handle_button_clicks()
-    
+
     # Nupud
     pygame.draw.rect(screen, GREEN, increase_button_rect)
     pygame.draw.rect(screen, RED, decrease_button_rect)
 
     # Nuppude tekstid
-    font = pygame.font.Font(None, 36)
-    increase_text = font.render('+ Volume', True, WHITE)
-    decrease_text = font.render('- Volume', True, WHITE)
+    increase_text = smallfont.render('+ Volume', True, WHITE)
+    decrease_text = smallfont.render('- Volume', True, WHITE)
     screen.blit(increase_text, (increase_button_rect.x + 20, increase_button_rect.y + 10))
     screen.blit(decrease_text, (decrease_button_rect.x + 20, decrease_button_rect.y + 10))
 
-    # Kuvab helitugevuse 
-    volume_text = font.render(f'Volume: {int(volume_master * 100)}%', True, WHITE)
-    screen.blit(volume_text, (50, 50))
+    # Kuvab helitugevuse
+    volume_text = smallfont.render(f'Volume: {int(volume_master * 100)}%', True, WHITE)
+    volume_text = smallfont.render(f'Volume: {int(volume_master * 100)}%', True, WHITE)
+    screen.blit(volume_text, (100, 250))
 
 def apply_blur(surface, scale_factor=0.1):
     """Applies a blur effect to the given surface."""
@@ -351,31 +351,31 @@ def play():
 
         # Jalaga löömine
         if game_stop == False:
-             # Vasak löömine timeriga
-            if leftTouchingBallVertically and keys[pygame.K_q]:
+            # Vasak löömine timeriga
+            if keys[pygame.K_q]:
                 current_time = pygame.time.get_ticks()
                 if not is_left_kicking and (current_time - left_kick_timer >= kick_cooldown):
-                    print("kicking")
-                    ballDir = 1
-                    if playerleft_facing_goal == False:
-                        ballDir = -1
-                    ball_speed = 9 * ballDir
-                    ball_upspeed = -14
-                    left_kick_timer = current_time
                     is_left_kicking = True
+                    left_kick_timer = current_time
+                    if leftTouchingBallVertically:
+                        ballDir = 1
+                        if playerleft_facing_goal == False:
+                            ballDir = -1
+                        ball_speed = 9 * ballDir
+                        ball_upspeed = -14
 
             # Parem löömine timeriga
-            if rightTouchingBallVertically and keys[pygame.K_KP0]:
+            if keys[pygame.K_KP0]:
                 current_time = pygame.time.get_ticks()
                 if not is_right_kicking and (current_time - right_kick_timer >= kick_cooldown):
-                    print("kicking")
-                    ballDir = 1
-                    if playerright_facing_goal == True:
-                        ballDir = -1
-                    ball_speed = 9 * ballDir
-                    ball_upspeed = -14
                     right_kick_timer = current_time
                     is_right_kicking = True
+                    if rightTouchingBallVertically:
+                        ballDir = 1
+                        if playerright_facing_goal == True:
+                            ballDir = -1
+                        ball_speed = 9 * ballDir
+                        ball_upspeed = -14
 
             # Lõpetab löömise pärast timerit
             if is_left_kicking and pygame.time.get_ticks() - left_kick_timer >= kick_duration:
@@ -426,7 +426,7 @@ def play():
             if playerleft_rect.top <= goalHeight + 20 <= playerleft_rect.bottom and playerleft_upspeed < 0:
                 playerleft_upspeed = 0
 
-            elif playerleft_rect.bottom >= goalHeight >= playerleft_rect.top:
+            elif playerleft_rect.bottom <= goalHeight:
                 playerleft_rect.bottom = goalHeight
                 playerleft_upspeed = 0
                 is_left_player_on_ground = True
@@ -436,11 +436,10 @@ def play():
             if playerright_rect.top <= goalHeight + 20 <= playerright_rect.bottom and playerright_upspeed < 0:
                 playerright_upspeed = 0
 
-            elif playerright_rect.bottom >= goalHeight >= playerright_rect.top:
+            elif playerright_rect.bottom <= goalHeight:
                 playerright_rect.bottom = goalHeight
                 playerright_upspeed = 0
                 is_right_player_on_ground = True
-
         #################################################################################################
 
         if playerleft_rect.bottom >= 500:  # Maapind vasak mängija
@@ -550,9 +549,24 @@ def play():
                 if ball_rect.left >= goalright_rect.left and ball_rect.bottom >= goalright_rect.top:
                     inGoal_right = True
                     score_left += 1
-            
+
+        # palli libisemine varavast
+        if pygame.Rect.colliderect(ball_rect, goalleft_rect) and ball_rect.top < goalleft_rect.top and abs(
+                ball_speed) < 4:
+            if (ball_speed < 0):
+                ball_speed = -4
+            else:
+                ball_speed = 4
+
+        if pygame.Rect.colliderect(ball_rect, goalright_rect) and ball_rect.top < goalright_rect.top and abs(
+                ball_speed) < 4:
+            if (ball_speed < 0):
+                ball_speed = -4
+            else:
+                ball_speed = 4
+
         # Skoori näitamine
-        text = font.render((str(score_left) + ' - ' + str(score_right)), True, BLACK)
+        text = scorefont.render((str(score_left) + ' - ' + str(score_right)), True, BLACK)
         text_rect = text.get_rect(center=rectangle.center)
 
         if score_left >= 7:
