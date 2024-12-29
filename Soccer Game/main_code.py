@@ -11,6 +11,7 @@ fonts_dir = os.path.join(base_dir, "Fonts")
 pygame.init()
 screen = pygame.display.set_mode((1280, 720))
 clock = pygame.time.Clock()
+pygame.display.set_caption("Soccer Game")
 
 # Taustapilt
 bg_surf = pygame.image.load(os.path.join(images_dir, "game_bg.png")).convert()
@@ -19,6 +20,9 @@ bg_surf = pygame.transform.scale(bg_surf, (1280, 720))
 # Menüü taustapilt
 menuBackground_surf = pygame.image.load(os.path.join(images_dir, "MenuBackground.jpg")).convert()
 menuBackground_surf = pygame.transform.scale(menuBackground_surf, (1280, 720))
+
+choose_background = pygame.image.load(os.path.join(images_dir, 'charchoosebackground.jpg')).convert_alpha()
+choose_background = pygame.transform.scale(choose_background, (1280, 720))
 
 # Väravad
 goalleft_surf = pygame.image.load(os.path.join(images_dir, "goal_left.png")).convert_alpha()
@@ -29,29 +33,86 @@ goalright_surf = pygame.image.load(os.path.join(images_dir, "goal_right.png")).c
 goalright_surf = pygame.transform.scale(goalright_surf, (238, 280))
 goalright_rect = goalright_surf.get_rect(midbottom=(1295, 520))
 
-# Vasaku mängija pildid
-playerleft_surf = pygame.image.load(os.path.join(images_dir, "LeftChar.png")).convert_alpha()
-playerleft_surf = pygame.transform.scale(playerleft_surf, (80, 125))
-playerleft_rect = playerleft_surf.get_rect(midbottom=(130, 500))
+# Mängija pildid
+#Vasak
+mbappe_surf = pygame.image.load(os.path.join(images_dir, "mbappe.png")).convert_alpha()
+mbappe_surf = pygame.transform.scale(mbappe_surf, (80, 125))
+mbappe_kick_surf = pygame.image.load(os.path.join(images_dir, 'mbappe_kick.png')).convert_alpha()
+mbappe_kick_surf = pygame.transform.scale(mbappe_kick_surf, (80, 125))
 
-kickplayerleft_surf = pygame.image.load(os.path.join(images_dir, "kick_leftchar.png")).convert_alpha()
-kickplayerleft_surf = pygame.transform.scale(kickplayerleft_surf, (80, 125))
+antony_surf = pygame.image.load(os.path.join(images_dir, "antony.png")).convert_alpha()
+antony_surf = pygame.transform.scale(antony_surf, (80, 125))
+antony_kick_surf = pygame.image.load(os.path.join(images_dir, 'antony_kick.png')).convert_alpha()
+antony_kick_surf = pygame.transform.scale(antony_kick_surf, (80, 125))
+
+braithwaite_surf = pygame.image.load(os.path.join(images_dir, "Braithwaite.png")).convert_alpha()
+braithwaite_surf = pygame.transform.scale(braithwaite_surf, (80, 125))
+braithwaite_kick_surf = pygame.image.load(os.path.join(images_dir, "Braithwaite_kick.png")).convert_alpha()
+braithwaite_kick_surf = pygame.transform.scale(braithwaite_kick_surf, (80, 125))
+
+onana_surf = pygame.image.load(os.path.join(images_dir, "Onana.png")).convert_alpha()
+onana_surf = pygame.transform.scale(onana_surf, (80, 125))
+onana_kick_surf = pygame.image.load(os.path.join(images_dir, "Onana_kick.png")).convert_alpha()
+onana_kick_surf = pygame.transform.scale(onana_kick_surf, (80, 125))
+
+#Parem
+vandijk_surf = pygame.image.load(os.path.join(images_dir, "vandijk.png")).convert_alpha()
+vandijk_surf = pygame.transform.scale(vandijk_surf, (80, 125))
+vandijk_kick_surf = pygame.image.load(os.path.join(images_dir, "vandijk_kick.png")).convert_alpha()
+vandijk_kick_surf = pygame.transform.scale(vandijk_kick_surf, (80, 125))
+
+mudryk_surf = pygame.image.load(os.path.join(images_dir, "Mudryk.png")).convert_alpha()
+mudryk_surf = pygame.transform.scale(mudryk_surf, (80, 125))
+mudryk_kick_surf = pygame.image.load(os.path.join(images_dir, "Mudryk_kick.png")).convert_alpha()
+mudryk_kick_surf = pygame.transform.scale(mudryk_kick_surf, (80, 125))
+
+akinfenwa_surf = pygame.image.load(os.path.join(images_dir, "Akinfenwa.png")).convert_alpha()
+akinfenwa_surf = pygame.transform.scale(akinfenwa_surf, (80, 125))
+akinfenwa_kick_surf = pygame.image.load(os.path.join(images_dir, "Akinfenwa_kick.png")).convert_alpha()
+akinfenwa_kick_surf = pygame.transform.scale(akinfenwa_kick_surf, (80, 125))
+
+lingard_surf = pygame.image.load(os.path.join(images_dir, "Lingard.png")).convert_alpha()
+lingard_surf = pygame.transform.scale(lingard_surf, (80, 125))
+lingard_kick_surf = pygame.image.load(os.path.join(images_dir, "Lingard_kick.png")).convert_alpha()
+lingard_kick_surf = pygame.transform.scale(lingard_kick_surf, (80, 125))
+
+# Mängija valik
+left_characters = [
+    {'name': 'Mbappe', 'image': mbappe_surf, 'kick_image': mbappe_kick_surf},
+    {'name': 'Antony', 'image': antony_surf, 'kick_image': antony_kick_surf},
+    {'name': 'Braithwaite', 'image': braithwaite_surf, 'kick_image': braithwaite_kick_surf},
+    {'name': 'Onana', 'image': onana_surf, 'kick_image': onana_kick_surf}
+]
+
+right_characters = [
+    {'name': 'Van Dijk', 'image': vandijk_surf, 'kick_image': vandijk_kick_surf},
+    {'name': 'Mudryk', 'image': mudryk_surf, 'kick_image': mudryk_kick_surf},
+    {'name': 'Akinfenwa', 'image': akinfenwa_surf, 'kick_image': akinfenwa_kick_surf},
+    {'name': 'Lingard', 'image': lingard_surf, 'kick_image': lingard_kick_surf}
+]
+
+left_selected_index = 0
+right_selected_index = 0
+
+choose_cooldown = 10
+left_choose_timer = 0
+right_choose_timer = 0
+
+activePlayer_left = left_characters[left_selected_index]
+playerleft_surf = activePlayer_left['image']
+kickplayerleft_surf = activePlayer_left['kick_image']
+playerleft_flipped_surf = pygame.transform.flip(playerleft_surf, True, False)
 kickplayerleft_flipped_surf = pygame.transform.flip(kickplayerleft_surf, True, False)
 
-playerleft_flipped_surf = pygame.transform.flip(playerleft_surf, True, False)
-playerleft_flipped_surf = pygame.transform.scale(playerleft_flipped_surf, (80, 125))
-
-# Parema mängija pildid
-playerright_surf = pygame.image.load(os.path.join(images_dir, "player.png")).convert_alpha()
-playerright_surf = pygame.transform.scale(playerright_surf, (80, 125))
-playerright_rect = playerright_surf.get_rect(midbottom=(1160, 500))
-
-kickplayerright_surf = pygame.image.load(os.path.join(images_dir, "kick_rightchar.png")).convert_alpha()
-kickplayerright_surf = pygame.transform.scale(kickplayerright_surf, (80, 125))
+activePlayer_right = right_characters[right_selected_index]
+playerright_surf = activePlayer_right['image']
+kickplayerright_surf = activePlayer_right['kick_image']
+playerright_flipped_surf = pygame.transform.flip(playerright_surf, True, False)
 kickplayerright_flipped_surf = pygame.transform.flip(kickplayerright_surf, True, False)
 
-playerright_flipped_surf = pygame.transform.flip(playerright_surf, True, False)
-playerright_flipped_surf = pygame.transform.scale(playerright_flipped_surf, (80, 125))
+
+playerleft_rect = playerleft_surf.get_rect(midbottom=(130, 500))
+playerright_rect = playerright_surf.get_rect(midbottom=(1160, 500))
 
 # Pall
 ball_surf = pygame.image.load(os.path.join(images_dir, "soccerball.png")).convert_alpha()
@@ -60,19 +121,20 @@ ball_surf = pygame.transform.scale(ball_surf, (54, 54))
 # Muusika
 pygame.mixer.music.load(os.path.join(music_dir, "worldcup.mp3"))
 pygame.mixer.music.play(-1)
-pygame.mixer.music.set_volume(0.5)
+pygame.mixer.music.set_volume(0)
 
 # Mängu muutujad
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 GREEN = (0, 255, 0)
 RED = (255, 0, 0)
+HIGHLIGHT = (255, 255, 0)
 
 rectangle = pygame.Rect(555, 25, 170, 85)
 
 font = pygame.font.Font((os.path.join(fonts_dir, "Sports.ttf")), 40)
 smallfont = pygame.font.Font((os.path.join(fonts_dir, "Sports.ttf")), 20)
-scorefont = pygame.font.Font((os.path.join(fonts_dir, "Sports.ttf")), 69)
+scorefont = pygame.font.Font((os.path.join(fonts_dir, "Sports.ttf")), 60)
 shadow_color = (0, 0, 0)
 shadow_offset = (3, 3)
 
@@ -130,6 +192,9 @@ decrease_button_rect = pygame.Rect(100, 400, button_width, button_height)
 volume_master = 0.5
 last_volume_change_time = 0
 volume_change_cooldown = 0.1
+
+# other variables
+return_key_pressed = False
 
 ########################################################################
 def draw_text_with_shadow(surface, text, font, color, pos, shadow_color=(0, 0, 0), shadow_offset=(2, 2)):
@@ -209,6 +274,81 @@ def draw_main_menu(): # Põhimenüü
     volume_text = smallfont.render(f'Volume: {int(volume_master * 100)}%', True, WHITE)
     volume_text = smallfont.render(f'Volume: {int(volume_master * 100)}%', True, WHITE)
     screen.blit(volume_text, (100, 250))
+
+def characterSelection():
+    global left_selected_index, right_selected_index, choose_cooldown, left_choose_timer, right_choose_timer
+    screen.blit(choose_background, (0, 0))
+    #valimine
+    if keys[pygame.K_d]:
+        if left_choose_timer == 0:
+            left_selected_index = (left_selected_index + 1) % len(left_characters)
+            left_choose_timer = choose_cooldown
+
+    if keys[pygame.K_a]:
+        if left_choose_timer == 0:
+            left_selected_index = (left_selected_index - 1) % len(left_characters)
+            left_choose_timer = choose_cooldown
+
+    if keys[pygame.K_RIGHT]:
+        if right_choose_timer == 0:
+            right_selected_index = (right_selected_index + 1) % len(left_characters)
+            right_choose_timer = choose_cooldown
+
+    if keys[pygame.K_LEFT]:
+        if right_choose_timer == 0:
+            right_selected_index = (right_selected_index - 1) % len(left_characters)
+            right_choose_timer = choose_cooldown
+
+    if left_choose_timer > 0:
+        left_choose_timer -= 1
+    if right_choose_timer > 0:
+        right_choose_timer -= 1
+
+    #loogika
+    for i, leftchar in enumerate(left_characters):
+        leftchar_x = 1280 // 4 - (len(left_characters) * 120) // 2 + i * 100
+        leftchar_y = 720 // 2
+
+        screen.blit(leftchar["image"], (leftchar_x, leftchar_y))
+
+        if i == left_selected_index:
+            leftchar_image_rect = leftchar['image'].get_rect(topleft=(leftchar_x, leftchar_y))
+            screen.blit(leftchar['image'], leftchar_image_rect.topleft)
+            pygame.draw.rect(screen, HIGHLIGHT, (leftchar_x - 2, leftchar_y - 2, 85, 130), 3)
+
+            leftchar_name_text = smallfont.render(leftchar["name"], True, WHITE)
+            leftchar_name_text_x = leftchar_image_rect.centerx
+            leftchar_name_text_y = leftchar_image_rect.bottom + 20
+            leftchar_name_text_rect = leftchar_name_text.get_rect(center=(leftchar_name_text_x, leftchar_name_text_y))
+            screen.blit(leftchar_name_text, leftchar_name_text_rect)
+
+    for i, rightchar in enumerate(right_characters):
+        rightchar_x = 1280 * 0.75 - (len(right_characters) * 120) // 2 + i * 100
+        rightchar_y = 720 // 2
+
+        screen.blit(rightchar['image'], (rightchar_x, rightchar_y))
+
+        if i == right_selected_index:
+            rightchar_image_rect = rightchar['image'].get_rect(topleft=(rightchar_x, rightchar_y))
+            screen.blit(rightchar['image'], rightchar_image_rect.topleft)
+            pygame.draw.rect(screen, HIGHLIGHT, (rightchar_x -2, rightchar_y - 2, 85, 130), 3)
+            
+            rightchar_name_text = smallfont.render(rightchar["name"], True, WHITE)
+            rightchar_name_text_x = rightchar_image_rect.centerx
+            rightchar_name_text_y = rightchar_image_rect.bottom + 20
+            rightchar_name_text_rect = rightchar_name_text.get_rect(center=(rightchar_name_text_x, rightchar_name_text_y))
+            screen.blit(rightchar_name_text, rightchar_name_text_rect)
+
+
+
+    #Rendering
+    EnterToStart_text = font.render('Press Enter to start game', True, WHITE)
+    EnterToStart_text_rect = EnterToStart_text.get_rect(center=(1280/2, 720 * 0.85))
+    screen.blit(EnterToStart_text, EnterToStart_text_rect)
+
+    CharacterSelectionText = font.render("Select your characters!", True, WHITE)
+    CharacterSelectionTextRect = CharacterSelectionText.get_rect(center=(1280/2, 720/4))
+    screen.blit(CharacterSelectionText, CharacterSelectionTextRect)
 
 def apply_blur(surface, scale_factor=0.1):
     """Applies a blur effect to the given surface."""
@@ -626,13 +766,12 @@ def play():
         # Skoori näitamine
         pygame.draw.rect(screen, WHITE, rectangle)
         screen.blit(text, text_rect)
-
 ##########################################################################################################################################################
 
 while True:
-    screen.fill(BLACK)
-
+    #screen.fill(BLACK)
     keys = pygame.key.get_pressed()  # Kontrollib klahvivajutusi
+
 
     # Mängu sulgemine
     for event in pygame.event.get():
@@ -643,31 +782,67 @@ while True:
     # Põhimenüü
     if game_state == 'main_menu':
         if keys[pygame.K_RETURN]:
-            score_left = 0
-            score_right = 0
-            resetpos()
-            game_state = 'game_running'
+            if not return_key_pressed:
+                return_key_pressed = True
+                game_state = 'choose_character'
+                print("Entering choose_character state...")
+        else:
+            return_key_pressed = False
         draw_main_menu()
+
+    # Mangijate valimise menuu
+    if game_state == 'choose_character':
+        if keys[pygame.K_RETURN]:
+            if not return_key_pressed:
+                return_key_pressed = True
+                activePlayer_left = left_selected_index
+                activePlayer_right = right_selected_index
+
+                activePlayer_left = left_characters[left_selected_index]
+                playerleft_surf = activePlayer_left['image']
+                kickplayerleft_surf = activePlayer_left['kick_image']
+                playerleft_flipped_surf = pygame.transform.flip(playerleft_surf, True, False)
+                kickplayerleft_flipped_surf = pygame.transform.flip(kickplayerleft_surf, True, False)
+
+                activePlayer_right = right_characters[right_selected_index]
+                playerright_surf = activePlayer_right['image']
+                kickplayerright_surf = activePlayer_right['kick_image']
+                playerright_flipped_surf = pygame.transform.flip(playerright_surf, True, False)
+                kickplayerright_flipped_surf = pygame.transform.flip(kickplayerright_surf, True, False)
+
+                score_left = 0
+                score_right = 0
+
+                resetpos()
+
+                game_state = 'game_running'
+                print("Entering game_running state...")
+        else:
+            return_key_pressed = False
+        characterSelection()
 
     # Mäng läbi
     if game_state == 'winner_screen':
         if keys[pygame.K_RETURN]:
-            score_left = 0
-            score_right = 0
-            resetpos()
-            game_state = 'game_running'
+            left_selected_index = 0
+            right_selected_index = 0
+
+            game_state = 'choose_character'
+            print("Entering choose_character state...")
         winner()
-
-
 
     # Mäng käib
     if game_state == 'game_running':
         if score_left >= 7 or score_right >= 7:
             game_state = 'winner_screen'
+            print("Entering winner_screen state...")
+
         play()
+
         if keys[pygame.K_ESCAPE]:
             game_snapshot = screen.copy()
             game_state = 'pause_menu'
+            print("Entering pause_menu state...")
 
 
     #paus
