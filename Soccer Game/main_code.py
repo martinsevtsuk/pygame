@@ -666,6 +666,8 @@ def play():
                     ball_upspeed = -1 * (ball_upspeed / 1.6)
 
                 ball_speed = ball_speed / ball_slowing
+
+        # palli porkumine maast
         if ball_rect.bottom > 500:
             ball_rect.bottom = 500
             if ball_upspeed <= 1.5:
@@ -675,8 +677,9 @@ def play():
                 ball_upspeed = -1 * (ball_upspeed / 1.6)
             ball_speed = ball_speed / ball_slowing
 
-        if (abs(ball_speed) < 0.01):
-            ball_speed = 0
+        if abs(ball_speed) < 0.01:
+             ball_speed = 0
+            
 
         # pall varava sees 
         if game_stop == False:
@@ -691,19 +694,17 @@ def play():
                     score_left += 1
 
         # palli libisemine varavast
-        if pygame.Rect.colliderect(ball_rect, goalleft_rect) and ball_rect.top < goalleft_rect.top and abs(
-                ball_speed) < 4:
+        if ball_upspeed <= 0.1 and ball_rect.bottom <= goalleft_rect.top and abs(ball_speed) < 2 and ball_rect.left <= goalleft_rect.right:
             if (ball_speed < 0):
-                ball_speed = -4
+                ball_speed = -2
             else:
-                ball_speed = 4
+                ball_speed = 2
 
-        if pygame.Rect.colliderect(ball_rect, goalright_rect) and ball_rect.top < goalright_rect.top and abs(
-                ball_speed) < 4:
+        if ball_upspeed <= 0.1 and ball_rect.top <= goalright_rect.top and abs(ball_speed) < 2 and ball_rect.right >= goalright_rect.left:
             if (ball_speed < 0):
-                ball_speed = -4
+                ball_speed = -2
             else:
-                ball_speed = 4
+                ball_speed = 2
 
         # Skoori näitamine
         text = scorefont.render((str(score_left) + ' - ' + str(score_right)), True, BLACK)
