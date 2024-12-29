@@ -505,7 +505,7 @@ def play():
                         ball_upspeed = -14
 
             # Parem löömine timeriga
-            if keys[pygame.K_KP0]:
+            if keys[pygame.K_RCTRL]:
                 current_time = pygame.time.get_ticks()
                 if not is_right_kicking and (current_time - right_kick_timer >= kick_cooldown):
                     right_kick_timer = current_time
