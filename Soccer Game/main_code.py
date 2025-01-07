@@ -2,6 +2,7 @@ import pygame
 from sys import exit
 import time
 import os
+import random
 
 base_dir = "Game Files"
 images_dir = os.path.join(base_dir, "Images")
@@ -34,47 +35,49 @@ goalright_surf = pygame.transform.scale(goalright_surf, (238, 280))
 goalright_rect = goalright_surf.get_rect(midbottom=(1295, 520))
 
 # Mängija pildid
+player_size = (80, 125)
+
 #Vasak
 mbappe_surf = pygame.image.load(os.path.join(images_dir, "mbappe.png")).convert_alpha()
-mbappe_surf = pygame.transform.scale(mbappe_surf, (80, 125))
+mbappe_surf = pygame.transform.scale(mbappe_surf, player_size)
 mbappe_kick_surf = pygame.image.load(os.path.join(images_dir, 'mbappe_kick.png')).convert_alpha()
-mbappe_kick_surf = pygame.transform.scale(mbappe_kick_surf, (80, 125))
+mbappe_kick_surf = pygame.transform.scale(mbappe_kick_surf, player_size)
 
 antony_surf = pygame.image.load(os.path.join(images_dir, "antony.png")).convert_alpha()
-antony_surf = pygame.transform.scale(antony_surf, (80, 125))
+antony_surf = pygame.transform.scale(antony_surf, player_size)
 antony_kick_surf = pygame.image.load(os.path.join(images_dir, 'antony_kick.png')).convert_alpha()
-antony_kick_surf = pygame.transform.scale(antony_kick_surf, (80, 125))
+antony_kick_surf = pygame.transform.scale(antony_kick_surf, player_size)
 
 braithwaite_surf = pygame.image.load(os.path.join(images_dir, "Braithwaite.png")).convert_alpha()
-braithwaite_surf = pygame.transform.scale(braithwaite_surf, (80, 125))
+braithwaite_surf = pygame.transform.scale(braithwaite_surf, player_size)
 braithwaite_kick_surf = pygame.image.load(os.path.join(images_dir, "Braithwaite_kick.png")).convert_alpha()
-braithwaite_kick_surf = pygame.transform.scale(braithwaite_kick_surf, (80, 125))
+braithwaite_kick_surf = pygame.transform.scale(braithwaite_kick_surf, player_size)
 
 onana_surf = pygame.image.load(os.path.join(images_dir, "Onana.png")).convert_alpha()
-onana_surf = pygame.transform.scale(onana_surf, (80, 125))
+onana_surf = pygame.transform.scale(onana_surf, player_size)
 onana_kick_surf = pygame.image.load(os.path.join(images_dir, "Onana_kick.png")).convert_alpha()
-onana_kick_surf = pygame.transform.scale(onana_kick_surf, (80, 125))
+onana_kick_surf = pygame.transform.scale(onana_kick_surf, player_size)
 
 #Parem
 vandijk_surf = pygame.image.load(os.path.join(images_dir, "vandijk.png")).convert_alpha()
-vandijk_surf = pygame.transform.scale(vandijk_surf, (80, 125))
+vandijk_surf = pygame.transform.scale(vandijk_surf, player_size)
 vandijk_kick_surf = pygame.image.load(os.path.join(images_dir, "vandijk_kick.png")).convert_alpha()
-vandijk_kick_surf = pygame.transform.scale(vandijk_kick_surf, (80, 125))
+vandijk_kick_surf = pygame.transform.scale(vandijk_kick_surf, player_size)
 
 mudryk_surf = pygame.image.load(os.path.join(images_dir, "Mudryk.png")).convert_alpha()
-mudryk_surf = pygame.transform.scale(mudryk_surf, (80, 125))
+mudryk_surf = pygame.transform.scale(mudryk_surf, player_size)
 mudryk_kick_surf = pygame.image.load(os.path.join(images_dir, "Mudryk_kick.png")).convert_alpha()
-mudryk_kick_surf = pygame.transform.scale(mudryk_kick_surf, (80, 125))
+mudryk_kick_surf = pygame.transform.scale(mudryk_kick_surf, player_size)
 
 akinfenwa_surf = pygame.image.load(os.path.join(images_dir, "Akinfenwa.png")).convert_alpha()
-akinfenwa_surf = pygame.transform.scale(akinfenwa_surf, (80, 125))
+akinfenwa_surf = pygame.transform.scale(akinfenwa_surf, player_size)
 akinfenwa_kick_surf = pygame.image.load(os.path.join(images_dir, "Akinfenwa_kick.png")).convert_alpha()
-akinfenwa_kick_surf = pygame.transform.scale(akinfenwa_kick_surf, (80, 125))
+akinfenwa_kick_surf = pygame.transform.scale(akinfenwa_kick_surf, player_size)
 
 lingard_surf = pygame.image.load(os.path.join(images_dir, "Lingard.png")).convert_alpha()
-lingard_surf = pygame.transform.scale(lingard_surf, (80, 125))
+lingard_surf = pygame.transform.scale(lingard_surf, player_size)
 lingard_kick_surf = pygame.image.load(os.path.join(images_dir, "Lingard_kick.png")).convert_alpha()
-lingard_kick_surf = pygame.transform.scale(lingard_kick_surf, (80, 125))
+lingard_kick_surf = pygame.transform.scale(lingard_kick_surf, player_size)
 
 # Mängija valik
 left_characters = [
@@ -116,7 +119,8 @@ playerright_rect = playerright_surf.get_rect(midbottom=(1160, 500))
 
 # Pall
 ball_surf = pygame.image.load(os.path.join(images_dir, "soccerball.png")).convert_alpha()
-ball_surf = pygame.transform.scale(ball_surf, (54, 54))
+ball_size = (54, 54)
+ball_surf = pygame.transform.scale(ball_surf, ball_size)
 
 # Muusika
 pygame.mixer.music.load(os.path.join(music_dir, "worldcup.mp3"))
@@ -179,6 +183,7 @@ score_left = 6
 gamewinner = 'ishowspeed'
 
 # Mängu seisund
+game_mode = 0
 game_state = 'main_menu'
 game_stop = False
 game_running = False
@@ -196,14 +201,31 @@ volume_change_cooldown = 0.1
 # other variables
 return_key_pressed = False
 
+# chaos mode effects and timer
+last_time_chaos_effect = 0
+chaos_timer_interval = 10000 #10 sec
+reset_timer_interval = 5000  
+effect_active = False
+reset_timer = 0  
+
+effects = [
+    {"name": "Low Gravity", "gravity": 0.55, "ball_gravity": 0.3},
+    {"name": "Speedy Gonzales", "move_speed": 9},
+    {"name": "No Jumping", "jump_strength": 0}
+]
+
 ########################################################################
-def draw_text_with_shadow(surface, text, font, color, pos, shadow_color=(0, 0, 0), shadow_offset=(2, 2)):
+def draw_text_with_shadow(surface, text, font, color, pos, onClick, shadow_color=(0, 0, 0), shadow_offset=(2, 2)):
 
     # Render the shadow text
     shadow_text = font.render(text, True, shadow_color)
     shadow_pos = (pos[0] + shadow_offset[0], pos[1] + shadow_offset[1])
     surface.blit(shadow_text, shadow_pos)
-
+    if onClick != None:
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+        if shadow_text.get_rect(topleft =(pos)).collidepoint(mouse_x, mouse_y):
+            if pygame.mouse.get_pressed()[0]:
+                onClick()
     # Render the main text on top of the shadow
     main_text = font.render(text, True, color)
     surface.blit(main_text, pos)
@@ -275,6 +297,90 @@ def draw_main_menu(): # Põhimenüü
     volume_text = smallfont.render(f'Volume: {int(volume_master * 100)}%', True, WHITE)
     screen.blit(volume_text, (100, 250))
 
+def game_mode_menu():
+    screen.blit(menuBackground_surf, (0, 0))
+
+    choose_gamemode_text = 'Choose gamemode!'
+    normal_game_text = 'Normal mode'
+    chaos_game_text = 'Chaos mode'
+
+    mouse_pos = pygame.mouse.get_pos()
+
+    rendered_normal_game_text = font.render(normal_game_text, True, WHITE)
+    rendered_normal_game_text_rect = rendered_normal_game_text.get_rect(topleft=(200, 360))
+    normal_game_text_color = RED if rendered_normal_game_text_rect.collidepoint(mouse_pos) else WHITE
+
+    rendered_chaos_game_text = font.render(normal_game_text, True, WHITE)
+    rendered_chaos_game_text_rect = rendered_chaos_game_text.get_rect(topleft=(800, 360))
+    chaos_game_text_color = RED if rendered_chaos_game_text_rect.collidepoint(mouse_pos) else WHITE
+    
+    draw_text_with_shadow(screen, choose_gamemode_text, font, WHITE, (400, 150), None, shadow_color, shadow_offset)
+    draw_text_with_shadow(screen, normal_game_text, font, normal_game_text_color, (200, 360), chose_normalPlay, shadow_color, shadow_offset)
+    draw_text_with_shadow(screen, chaos_game_text, font, chaos_game_text_color, (800, 360), chose_chaosPlay, shadow_color, shadow_offset)
+
+    return rendered_normal_game_text_rect, rendered_chaos_game_text_rect
+
+def chose_normalPlay():
+    global game_mode, game_state
+    game_mode = 0
+    game_state = 'choose_character'
+
+def chose_chaosPlay():
+    global game_mode, game_state
+    game_mode = 1
+    game_state = 'choose_character'
+
+def normalPlay():
+    play()
+
+
+def chaosPlay():
+    global current_effect, last_time_chaos_effect, gravity, move_speed, jump_strength, ball_gravity, effect_active, reset_timer, effect_timer, game_state
+
+    # Get current time in milliseconds
+    current_time = pygame.time.get_ticks()
+
+    # If the game is paused, stop the timer (don't update it)
+    if game_state == "pause_menu":
+        return  # Skip effect update when paused
+
+    # Apply a new effect if there's no active effect and the effect has been reset for 10 seconds
+    if not effect_active and current_time - reset_timer >= reset_timer_interval:
+        # Choose a new random effect
+        current_effect = random.choice(effects)
+        gravity = current_effect.get("gravity", gravity)
+        ball_gravity = current_effect.get("ball_gravity", ball_gravity)
+        move_speed = current_effect.get("move_speed", move_speed)
+        jump_strength = current_effect.get("jump_strength", jump_strength)
+
+        print(f"New effect applied: {current_effect['name']}")
+
+        # Set effect as active and record the start time for the effect timer
+        effect_active = True
+        effect_timer = current_time  # Reset the effect timer
+
+    # If an effect is active, check if it's time to reset the effect (after 10 seconds)
+    if effect_active:
+        if current_time - effect_timer >= chaos_timer_interval:
+            # Reset the effect to normal values after 10 seconds
+            gravity = 1.1
+            ball_gravity = 1.0
+            move_speed = 6
+            jump_strength = -17.5
+            effect_active = False  # Reset effect active status
+            print("Effects reset!")
+
+            # Start the reset timer to wait 10 seconds before applying the next effect
+            reset_timer = current_time
+
+    # Call the play function to handle regular gameplay (you should define this in your game)
+    play()
+
+    # Display the effect information if it's active
+    if effect_active and current_effect:
+        active_effect_text = f"Effect: {current_effect['name']}"
+        draw_text_with_shadow(screen, active_effect_text, font, WHITE, (400, 675), None, shadow_color, shadow_offset)
+  
 def characterSelection():
     global left_selected_index, right_selected_index, choose_cooldown, left_choose_timer, right_choose_timer
     screen.blit(choose_background, (0, 0))
@@ -373,13 +479,48 @@ def pause_menu():
 
     # Display pause menu text
     title_text = 'Soccer Game'
-    pause_text = 'Paused'
+    pause_text = 'Resume Game'
+    reset_text = 'Main menu'
 
-    draw_text_with_shadow(screen, pause_text, font, WHITE, (545, 360), shadow_color, shadow_offset)
-    draw_text_with_shadow(screen, title_text, font, WHITE, (480, 250), shadow_color, shadow_offset)
+    draw_text_with_shadow(screen, pause_text, font, WHITE, (470, 360), resumeGame, shadow_color, shadow_offset)
+    draw_text_with_shadow(screen, title_text, font, WHITE, (480, 150), None, shadow_color, shadow_offset)
+    draw_text_with_shadow(screen, reset_text, font, WHITE, (500, 470), resetGame, shadow_color, shadow_offset)
+
+    mouse_pos = pygame.mouse.get_pos()
+
+    rendered_pause_text = font.render(pause_text, True, WHITE)
+    pause_text_rect = rendered_pause_text.get_rect(topleft=(545, 360))
+    pause_text_color = RED if pause_text_rect.collidepoint(mouse_pos) else WHITE
+
+    # Render and get rect for reset_text
+    rendered_reset_text = font.render(reset_text, True, WHITE)
+    reset_text_rect = rendered_reset_text.get_rect(topleft=(500, 470))
+    reset_text_color = RED if reset_text_rect.collidepoint(mouse_pos) else WHITE
+
+    # Draw texts with hover effect
+    draw_text_with_shadow(screen, pause_text, font, pause_text_color, (470, 360), None, shadow_color, shadow_offset)
+    draw_text_with_shadow(screen, reset_text, font, reset_text_color, (500, 470), None, shadow_color, shadow_offset)
+
+    # Return rects for interaction handling
+    return pause_text_rect, reset_text_rect
+
+def resetGame():
+    global left_selected_index, right_selected_index, game_state
+
+    left_selected_index = 0
+    right_selected_index = 0
+    game_state = 'main_menu'
+    draw_main_menu()
+
+def resumeGame():
+    global game_state
+    game_state = 'game_running'
+    play()
    ##################################################################### GAME LOGIC ############################################################################
+
+
 def play():
-        global game_stop, inGoal_left, inGoal_right, resetTimer, ball_speed, score_left, score_right, gamewinner, is_left_player_on_ground, is_right_player_on_ground, is_ball_on_ground, is_left_kicking, is_right_kicking, playerleft_upspeed, playerright_upspeed, ball_upspeed, playerleft_facing_goal, playerright_facing_goal, ball_rotation_angle, left_kick_timer, right_kick_timer, kick_cooldown
+        global  game_stop, inGoal_left, inGoal_right, resetTimer, ball_speed, score_left, score_right, gamewinner, is_left_player_on_ground, is_right_player_on_ground, is_ball_on_ground, is_left_kicking, is_right_kicking, playerleft_upspeed, playerright_upspeed, ball_upspeed, playerleft_facing_goal, playerright_facing_goal, ball_rotation_angle, left_kick_timer, right_kick_timer, kick_cooldown
         isSimpleCollide = pygame.Rect.colliderect(playerleft_rect, playerright_rect)
         isOneOnTopOfOther = isSimpleCollide and (playerleft_rect.top > playerright_rect.top or playerright_rect.top > playerleft_rect.top)
         # Kui värav, siis kõik algpositsioonidele
@@ -559,28 +700,6 @@ def play():
         playerright_rect.y += playerright_upspeed  # Liigutab paremat mängijat
         ball_rect.y += ball_upspeed
         ball_rect.x += ball_speed
-
-        ###################################################################################################
-        # Vasak mangija varavas
-        if playerleft_rect.right <= goalWidth or playerleft_rect.left >= 1280 - goalWidth:
-            if playerleft_rect.top <= goalHeight + 20 <= playerleft_rect.bottom and playerleft_upspeed < 0:
-                playerleft_upspeed = 0
-
-            elif playerleft_rect.bottom <= goalHeight:
-                playerleft_rect.bottom = goalHeight
-                playerleft_upspeed = 0
-                is_left_player_on_ground = True
-
-        # Parem mangija varavas
-        if playerright_rect.right <= goalWidth or playerright_rect.left >= 1280 - goalWidth:
-            if playerright_rect.top <= goalHeight + 20 <= playerright_rect.bottom and playerright_upspeed < 0:
-                playerright_upspeed = 0
-
-            elif playerright_rect.bottom <= goalHeight:
-                playerright_rect.bottom = goalHeight
-                playerright_upspeed = 0
-                is_right_player_on_ground = True
-        #################################################################################################
 
         if playerleft_rect.bottom >= 500:  # Maapind vasak mängija
             playerleft_rect.bottom = 500
@@ -785,11 +904,21 @@ while True:
         if keys[pygame.K_RETURN]:
             if not return_key_pressed:
                 return_key_pressed = True
+                game_state = 'game_mode_menu'
+                print("Entering game_mode_menu state...")
+        else:
+            return_key_pressed = False
+        draw_main_menu()
+
+    if game_state == 'game_mode_menu':
+        if keys[pygame.K_RETURN]:
+            if not return_key_pressed:
+                return_key_pressed = True
                 game_state = 'choose_character'
                 print("Entering choose_character state...")
         else:
             return_key_pressed = False
-        draw_main_menu()
+        game_mode_menu()
 
     # Mangijate valimise menuu
     if game_state == 'choose_character':
@@ -798,6 +927,10 @@ while True:
                 return_key_pressed = True
                 activePlayer_left = left_selected_index
                 activePlayer_right = right_selected_index
+
+                last_time_chaos_effect = 0
+                effect_active = False
+                reset_timer = 0 
 
                 activePlayer_left = left_characters[left_selected_index]
                 playerleft_surf = activePlayer_left['image']
@@ -817,7 +950,6 @@ while True:
                 resetpos()
 
                 game_state = 'game_running'
-                print("Entering game_running state...")
         else:
             return_key_pressed = False
         characterSelection()
@@ -828,22 +960,22 @@ while True:
             left_selected_index = 0
             right_selected_index = 0
 
-            game_state = 'choose_character'
-            print("Entering choose_character state...")
+            game_state = 'main_menu'
         winner()
 
     # Mäng käib
     if game_state == 'game_running':
         if score_left >= 7 or score_right >= 7:
             game_state = 'winner_screen'
-            print("Entering winner_screen state...")
 
-        play()
+        if game_mode == 0:
+            normalPlay()
+        else:
+            chaosPlay()
 
         if keys[pygame.K_ESCAPE]:
             game_snapshot = screen.copy()
             game_state = 'pause_menu'
-            print("Entering pause_menu state...")
 
 
     #paus
