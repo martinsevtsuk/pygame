@@ -16,7 +16,7 @@ Kaootilises moodis esinevad efektid nagu "low gravity", "speedy gonzales", "no j
 
 Igal mängijal on oma klahvid liikumiseks:
 
-- **Vasak mängija** kasutab Whüppamiseks, A vasakule liikumiseks ja D paremale liikumiseks. Löömiseks Q.
+- **Vasak mängija** kasutab W hüppamiseks, A vasakule liikumiseks ja D paremale liikumiseks. Löömiseks Q.
 - **Parem mängija** kasutab ÜLES-noolt hüppamiseks, VASAK-noolt vasakule liikumiseks ja PAREM-noolt paremale liikumiseks. Löömiseks RCtrl.
 
 Mängijad saavad hüpata, ja neid mõjutab gravitatsioon, mis toob nad lõpuks maapinnale tagasi. Mängijad ei saa väljuda mänguväljaku piiridest.
@@ -50,3 +50,7 @@ Mängul on mitu menüüd:
 
 **Eripärad**
 Kood on üles ehitatud nii, et seda saab laiendada – näiteks lisada uusi animatsioone, efekte, helisid või muuta füüsikareegleid. See on lihtne ja lõbus mäng, mis sobib kahele mängijale.
+
+**Üksteise panus**
+Mõlemad tiimiliikmed osalesid kõikides mänguarendamise aspektides. Esialgu tegeles mänguloogika ülesehitamisega Nikita ning kõikide visuaalsete elementide paigutamisega Martin. Projekti lõpupoole tegelesid mõlemad meeskonnaliikmed mängu edaspidise arendamisega ja viimistlemisega. 
+Martini peamiseks ülesanneks oli uuete featurite lisamine, Nikita tegeles enne lisatud mänguloogika parandamisega ja lihvimisega.
