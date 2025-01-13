@@ -173,7 +173,8 @@ left_kick_timer = 0
 right_kick_timer = 0
 is_right_kicking = False
 kick_duration = 500
-
+shot_power_hor = 9
+shot_power_ver = -14
 
 # Skoorimine
 inGoal_left = False
@@ -331,8 +332,13 @@ def chose_chaosPlay():
     game_state = 'choose_character'
 
 def normalPlay():
+    global gravity, move_speed, jump_strength, ball_gravity, effect_active
+    gravity = 1.1
+    ball_gravity = 1.0
+    move_speed = 6
+    jump_strength = -17.5
+    effect_active = False
     play()
-
 
 def chaosPlay():
     global current_effect, last_time_chaos_effect, gravity, move_speed, jump_strength, ball_gravity, effect_active, reset_timer, effect_timer, game_state
@@ -520,7 +526,7 @@ def resumeGame():
 
 
 def play():
-        global  game_stop, inGoal_left, inGoal_right, resetTimer, ball_speed, score_left, score_right, gamewinner, is_left_player_on_ground, is_right_player_on_ground, is_ball_on_ground, is_left_kicking, is_right_kicking, playerleft_upspeed, playerright_upspeed, ball_upspeed, playerleft_facing_goal, playerright_facing_goal, ball_rotation_angle, left_kick_timer, right_kick_timer, kick_cooldown
+        global  game_stop, inGoal_left, inGoal_right, resetTimer, ball_speed, score_left, score_right, gamewinner, is_left_player_on_ground, is_right_player_on_ground, is_ball_on_ground, is_left_kicking, is_right_kicking, playerleft_upspeed, playerright_upspeed, ball_upspeed, playerleft_facing_goal, playerright_facing_goal, ball_rotation_angle, left_kick_timer, right_kick_timer, kick_cooldown, shot_power_ver, shot_power_hor
         isSimpleCollide = pygame.Rect.colliderect(playerleft_rect, playerright_rect)
         isOneOnTopOfOther = isSimpleCollide and (playerleft_rect.top > playerright_rect.top or playerright_rect.top > playerleft_rect.top)
         # Kui värav, siis kõik algpositsioonidele
@@ -642,8 +648,8 @@ def play():
                         ballDir = 1
                         if playerleft_facing_goal == False:
                             ballDir = -1
-                        ball_speed = 9 * ballDir
-                        ball_upspeed = -14
+                        ball_speed = shot_power_hor * ballDir
+                        ball_upspeed = shot_power_ver
 
             # Parem löömine timeriga
             if keys[pygame.K_RCTRL]:
@@ -655,8 +661,8 @@ def play():
                         ballDir = 1
                         if playerright_facing_goal == True:
                             ballDir = -1
-                        ball_speed = 9 * ballDir
-                        ball_upspeed = -14
+                        ball_speed = shot_power_hor * ballDir
+                        ball_upspeed = shot_power_ver
 
             # Lõpetab löömise pärast timerit
             if is_left_kicking and pygame.time.get_ticks() - left_kick_timer >= kick_duration:
