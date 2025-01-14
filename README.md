@@ -53,4 +53,4 @@ Kood on üles ehitatud nii, et seda saab laiendada – näiteks lisada uusi anim
 
 **Üksteise panus**
 Mõlemad tiimiliikmed osalesid kõikides mänguarendamise aspektides. Esialgu tegeles mänguloogika ülesehitamisega Nikita ning kõikide visuaalsete elementide paigutamisega Martin. Projekti lõpupoole tegelesid mõlemad meeskonnaliikmed mängu edaspidise arendamisega ja viimistlemisega. 
-Martini peamiseks ülesanneks oli uuete featurite lisamine, Nikita tegeles enne lisatud mänguloogika vigade parandamisega.
+Martini peamiseks ülesandeks oli uute featurite lisamine, Nikita tegeles enne lisatud mänguloogika vigade parandamisega.
